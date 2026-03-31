@@ -1,3 +1,103 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(pwd)"
+
+echo "==> Applying Breakout Addiction BA-08 support scaffold in: $ROOT_DIR"
+
+mkdir -p \
+  lib/features/support/domain \
+  lib/features/support/data \
+  tools
+
+cat > pubspec.yaml <<'EOD'
+name: breakout_addiction
+description: Android-first recovery app for compulsive pornography use.
+publish_to: "none"
+
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  shared_preferences: ^2.2.3
+  flutter_secure_storage: ^9.2.2
+  url_launcher: ^6.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+EOD
+
+cat > lib/features/support/domain/support_contact.dart <<'EOD'
+class SupportContact {
+  final String name;
+  final String phone;
+
+  const SupportContact({
+    required this.name,
+    required this.phone,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'phone': phone,
+    };
+  }
+
+  factory SupportContact.fromMap(Map<String, dynamic> map) {
+    return SupportContact(
+      name: (map['name'] as String?) ?? '',
+      phone: (map['phone'] as String?) ?? '',
+    );
+  }
+
+  bool get isValid => name.trim().isNotEmpty && phone.trim().isNotEmpty;
+}
+EOD
+
+cat > lib/features/support/data/support_contact_repository.dart <<'EOD'
+import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../domain/support_contact.dart';
+
+class SupportContactRepository {
+  static const String _storageKey = 'trusted_support_contact';
+
+  Future<SupportContact?> getContact() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_storageKey);
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
+
+    final decoded = jsonDecode(raw) as Map<String, dynamic>;
+    final contact = SupportContact.fromMap(decoded);
+    return contact.isValid ? contact : null;
+  }
+
+  Future<void> saveContact(SupportContact contact) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_storageKey, jsonEncode(contact.toMap()));
+  }
+
+  Future<void> clearContact() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_storageKey);
+  }
+}
+EOD
+cat > lib/features/support/presentation/support_screen.dart <<'EOD'
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -463,3 +563,59 @@ class _SupportScreenState extends State<SupportScreen> {
     );
   }
 }
+EOD
+cat > tools/verify_ba08.py <<'EOD'
+from pathlib import Path
+import sys
+
+REQUIRED = [
+    'pubspec.yaml',
+    'lib/features/support/domain/support_contact.dart',
+    'lib/features/support/data/support_contact_repository.dart',
+    'lib/features/support/presentation/support_screen.dart',
+]
+
+REQUIRED_TEXT = {
+    'pubspec.yaml': 'url_launcher:',
+    'lib/features/support/domain/support_contact.dart': 'class SupportContact',
+    'lib/features/support/data/support_contact_repository.dart': 'class SupportContactRepository',
+    'lib/features/support/presentation/support_screen.dart': 'Call 988',
+    'lib/features/support/presentation/support_screen.dart::__trusted': 'Trusted Contact',
+    'lib/features/support/presentation/support_screen.dart::__text': 'Text 988',
+}
+
+def main() -> int:
+    root = Path.cwd()
+
+    missing = [path for path in REQUIRED if not (root / path).exists()]
+    if missing:
+        print('Missing files:')
+        for item in missing:
+            print(f' - {item}')
+        return 1
+
+    bad = []
+
+    for key, needle in REQUIRED_TEXT.items():
+        path = key.split('::__')[0]
+        text = (root / path).read_text(encoding='utf-8')
+        if needle not in text:
+            bad.append((path, needle))
+
+    if bad:
+        print('Content checks failed:')
+        for path, needle in bad:
+            print(f' - {path} missing: {needle}')
+        return 1
+
+    print('Breakout Addiction BA-08 support scaffold verification passed.')
+    print(f'Checked {len(REQUIRED)} files and {len(REQUIRED_TEXT)} content rules.')
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())
+EOD
+
+echo "==> BA-08 support scaffold written."
+echo "==> Running Python verification..."
+python3 tools/verify_ba08.py
