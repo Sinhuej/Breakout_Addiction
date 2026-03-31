@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/constants/route_names.dart';
+import '../../../../core/privacy/neutral_labels.dart';
 import '../../../../core/widgets/info_card.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../log/data/mood_log_repository.dart';
 import '../../../log/domain/mood_entry.dart';
+import '../../../privacy/data/privacy_label_repository.dart';
 
 class RiskStatusCard extends StatelessWidget {
   const RiskStatusCard({super.key});
@@ -51,12 +53,21 @@ class RiskStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final repository = MoodLogRepository();
+    final moodRepository = MoodLogRepository();
+    final labelRepository = PrivacyLabelRepository();
 
-    return FutureBuilder<List<MoodEntry>>(
-      future: repository.getEntries(),
+    return FutureBuilder<List<dynamic>>(
+      future: Future.wait<dynamic>([
+        moodRepository.getEntries(),
+        labelRepository.isNeutralModeEnabled(),
+      ]),
       builder: (context, snapshot) {
-        final entries = snapshot.data ?? <MoodEntry>[];
+        final data = snapshot.data;
+        final entries =
+            data != null && data.isNotEmpty ? data[0] as List<MoodEntry> : <MoodEntry>[];
+        final neutralMode =
+            data != null && data.length > 1 ? data[1] as bool : true;
+
         final label = _riskLabel(entries);
         final detail = _supportText(entries);
 
@@ -71,7 +82,7 @@ class RiskStatusCard extends StatelessWidget {
               Text(detail, style: AppTypography.muted),
               const SizedBox(height: AppSpacing.md),
               PrimaryButton(
-                label: 'Log Mood Now',
+                label: NeutralLabels.riskCardAction(neutralMode),
                 icon: Icons.mood_outlined,
                 onPressed: () => Navigator.pushNamed(context, RouteNames.moodLog),
               ),

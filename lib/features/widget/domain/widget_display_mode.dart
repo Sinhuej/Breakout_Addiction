@@ -1,0 +1,4 @@
+enum WidgetDisplayMode {
+  standard,
+  neutral,
+}
