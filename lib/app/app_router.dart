@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../core/constants/route_names.dart';
+import '../features/cycle/domain/cycle_stage.dart';
+import '../features/cycle/presentation/cycle_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/insights/presentation/insights_screen.dart';
+import '../features/log/presentation/cycle_stage_log_screen.dart';
 import '../features/log/presentation/log_hub_screen.dart';
 import '../features/privacy/domain/lock_scope.dart';
 import '../features/privacy/domain/lock_settings.dart';
@@ -19,11 +22,28 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const HomeScreen());
       case RouteNames.rescue:
         return MaterialPageRoute(builder: (_) => const RescueScreen());
+      case RouteNames.cycle:
+        return MaterialPageRoute(
+          builder: (_) => _protect(
+            scope: LockScope.cycle,
+            child: const CycleScreen(),
+          ),
+        );
       case RouteNames.logHub:
         return MaterialPageRoute(
           builder: (_) => _protect(
             scope: LockScope.logs,
             child: const LogHubScreen(),
+          ),
+        );
+      case RouteNames.cycleStageLog:
+        final stage = settings.arguments is CycleStage
+            ? settings.arguments as CycleStage
+            : CycleStage.triggers;
+        return MaterialPageRoute(
+          builder: (_) => _protect(
+            scope: LockScope.logs,
+            child: CycleStageLogScreen(initialStage: stage),
           ),
         );
       case RouteNames.insights:

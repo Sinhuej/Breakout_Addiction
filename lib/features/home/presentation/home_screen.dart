@@ -4,7 +4,6 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/route_names.dart';
 import '../../../core/widgets/info_card.dart';
-import '../../../core/widgets/primary_button.dart';
 import 'widgets/daily_quote_card.dart';
 import 'widgets/quick_actions_row.dart';
 import 'widgets/risk_status_card.dart';
@@ -54,10 +53,22 @@ class HomeScreen extends StatelessWidget {
                     style: AppTypography.muted,
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  PrimaryButton(
-                    label: 'Open Rescue Now',
-                    icon: Icons.health_and_safety_outlined,
-                    onPressed: () => Navigator.pushNamed(context, RouteNames.rescue),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () => Navigator.pushNamed(context, RouteNames.cycle),
+                      icon: const Icon(Icons.donut_large_outlined),
+                      label: const Text('Open Cycle Wheel'),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.pushNamed(context, RouteNames.rescue),
+                      icon: const Icon(Icons.health_and_safety_outlined),
+                      label: const Text('Open Rescue Now'),
+                    ),
                   ),
                 ],
               ),
