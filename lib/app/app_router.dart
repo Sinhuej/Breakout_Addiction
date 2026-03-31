@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import '../core/constants/route_names.dart';
 import '../features/cycle/domain/cycle_stage.dart';
 import '../features/cycle/presentation/cycle_screen.dart';
-import '../features/home/presentation/home_screen.dart';
 import '../features/insights/presentation/insights_screen.dart';
 import '../features/log/presentation/cycle_stage_log_screen.dart';
 import '../features/log/presentation/log_hub_screen.dart';
 import '../features/log/presentation/mood_log_screen.dart';
+import '../features/onboarding/presentation/home_entry_screen.dart';
+import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/privacy/domain/lock_scope.dart';
 import '../features/privacy/presentation/privacy_settings_screen.dart';
 import '../features/privacy/presentation/protected_route_gate.dart';
@@ -19,10 +20,11 @@ class AppRouter {
     switch (settings.name) {
       case RouteNames.home:
         return MaterialPageRoute(
-          builder: (_) => const ProtectedRouteGate(
-            scope: LockScope.app,
-            child: HomeScreen(),
-          ),
+          builder: (_) => const HomeEntryScreen(),
+        );
+      case RouteNames.onboarding:
+        return MaterialPageRoute(
+          builder: (_) => const OnboardingScreen(),
         );
       case RouteNames.rescue:
         return MaterialPageRoute(
@@ -86,10 +88,7 @@ class AppRouter {
         );
       default:
         return MaterialPageRoute(
-          builder: (_) => const ProtectedRouteGate(
-            scope: LockScope.app,
-            child: HomeScreen(),
-          ),
+          builder: (_) => const HomeEntryScreen(),
         );
     }
   }
