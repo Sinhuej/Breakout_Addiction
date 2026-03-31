@@ -43,6 +43,15 @@ class LogHubScreen extends StatelessWidget {
                 Text('Quick Log Actions', style: AppTypography.section),
                 const SizedBox(height: AppSpacing.sm),
                 PrimaryButton(
+                  label: 'Log Mood',
+                  icon: Icons.mood_outlined,
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    RouteNames.moodLog,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                PrimaryButton(
                   label: 'Log Cycle Stage',
                   icon: Icons.add_chart_outlined,
                   onPressed: () => Navigator.pushNamed(

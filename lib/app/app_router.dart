@@ -7,33 +7,50 @@ import '../features/home/presentation/home_screen.dart';
 import '../features/insights/presentation/insights_screen.dart';
 import '../features/log/presentation/cycle_stage_log_screen.dart';
 import '../features/log/presentation/log_hub_screen.dart';
+import '../features/log/presentation/mood_log_screen.dart';
 import '../features/privacy/domain/lock_scope.dart';
-import '../features/privacy/domain/lock_settings.dart';
-import '../features/privacy/presentation/lock_gate_screen.dart';
+import '../features/privacy/presentation/privacy_settings_screen.dart';
+import '../features/privacy/presentation/protected_route_gate.dart';
 import '../features/rescue/presentation/rescue_screen.dart';
 import '../features/support/presentation/support_screen.dart';
 
 class AppRouter {
-  static final LockSettings _lockSettings = LockSettings.disabled();
-
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case RouteNames.home:
-        return MaterialPageRoute(builder: (_) => const HomeScreen());
+        return MaterialPageRoute(
+          builder: (_) => const ProtectedRouteGate(
+            scope: LockScope.app,
+            child: HomeScreen(),
+          ),
+        );
       case RouteNames.rescue:
-        return MaterialPageRoute(builder: (_) => const RescueScreen());
+        return MaterialPageRoute(
+          builder: (_) => const ProtectedRouteGate(
+            scope: LockScope.app,
+            isRescueRoute: true,
+            child: RescueScreen(),
+          ),
+        );
       case RouteNames.cycle:
         return MaterialPageRoute(
-          builder: (_) => _protect(
+          builder: (_) => const ProtectedRouteGate(
             scope: LockScope.cycle,
-            child: const CycleScreen(),
+            child: CycleScreen(),
           ),
         );
       case RouteNames.logHub:
         return MaterialPageRoute(
-          builder: (_) => _protect(
+          builder: (_) => const ProtectedRouteGate(
             scope: LockScope.logs,
-            child: const LogHubScreen(),
+            child: LogHubScreen(),
+          ),
+        );
+      case RouteNames.moodLog:
+        return MaterialPageRoute(
+          builder: (_) => const ProtectedRouteGate(
+            scope: LockScope.logs,
+            child: MoodLogScreen(),
           ),
         );
       case RouteNames.cycleStageLog:
@@ -41,38 +58,39 @@ class AppRouter {
             ? settings.arguments as CycleStage
             : CycleStage.triggers;
         return MaterialPageRoute(
-          builder: (_) => _protect(
+          builder: (_) => ProtectedRouteGate(
             scope: LockScope.logs,
             child: CycleStageLogScreen(initialStage: stage),
           ),
         );
       case RouteNames.insights:
         return MaterialPageRoute(
-          builder: (_) => _protect(
+          builder: (_) => const ProtectedRouteGate(
             scope: LockScope.insights,
-            child: const InsightsScreen(),
+            child: InsightsScreen(),
           ),
         );
       case RouteNames.support:
-        return MaterialPageRoute(builder: (_) => const SupportScreen());
+        return MaterialPageRoute(
+          builder: (_) => const ProtectedRouteGate(
+            scope: LockScope.support,
+            child: SupportScreen(),
+          ),
+        );
+      case RouteNames.privacySettings:
+        return MaterialPageRoute(
+          builder: (_) => const ProtectedRouteGate(
+            scope: LockScope.app,
+            child: PrivacySettingsScreen(),
+          ),
+        );
       default:
-        return MaterialPageRoute(builder: (_) => const HomeScreen());
+        return MaterialPageRoute(
+          builder: (_) => const ProtectedRouteGate(
+            scope: LockScope.app,
+            child: HomeScreen(),
+          ),
+        );
     }
-  }
-
-  static Widget _protect({
-    required LockScope scope,
-    required Widget child,
-  }) {
-    final shouldLock = _lockSettings.shouldLock(scope);
-    if (!shouldLock) {
-      return child;
-    }
-
-    return LockGateScreen(
-      title: 'Protected Content',
-      subtitle: 'Unlock to continue.',
-      onUnlockSuccess: () {},
-    );
   }
 }

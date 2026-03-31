@@ -19,7 +19,7 @@ class QuickActionsRow extends StatelessWidget {
             label: const Text('I feel an urge'),
           ),
           OutlinedButton.icon(
-            onPressed: () => Navigator.pushNamed(context, RouteNames.logHub),
+            onPressed: () => Navigator.pushNamed(context, RouteNames.moodLog),
             icon: const Icon(Icons.mood_outlined),
             label: const Text('Log mood'),
           ),

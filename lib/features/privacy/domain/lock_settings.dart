@@ -28,7 +28,27 @@ class LockSettings {
     );
   }
 
+  LockSettings copyWith({
+    bool? isEnabled,
+    Set<LockScope>? enabledScopes,
+    bool? allowRescueWithoutUnlock,
+    bool? useBiometrics,
+    bool? hasPasscode,
+    bool? neutralPrivacyMode,
+  }) {
+    return LockSettings(
+      isEnabled: isEnabled ?? this.isEnabled,
+      enabledScopes: enabledScopes ?? this.enabledScopes,
+      allowRescueWithoutUnlock:
+          allowRescueWithoutUnlock ?? this.allowRescueWithoutUnlock,
+      useBiometrics: useBiometrics ?? this.useBiometrics,
+      hasPasscode: hasPasscode ?? this.hasPasscode,
+      neutralPrivacyMode: neutralPrivacyMode ?? this.neutralPrivacyMode,
+    );
+  }
+
   bool shouldLock(LockScope scope) {
-    return isEnabled && enabledScopes.contains(scope);
+    return isEnabled &&
+        (enabledScopes.contains(LockScope.app) || enabledScopes.contains(scope));
   }
 }
