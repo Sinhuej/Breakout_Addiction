@@ -95,7 +95,7 @@ class _CycleStageLogScreenState extends State<CycleStageLogScreen> {
                   Text('Current Stage', style: AppTypography.section),
                   const SizedBox(height: AppSpacing.sm),
                   DropdownButtonFormField<CycleStage>(
-                    value: _selectedStage,
+                    initialValue: _selectedStage,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                     ),

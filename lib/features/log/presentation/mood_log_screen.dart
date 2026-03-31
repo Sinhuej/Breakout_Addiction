@@ -121,7 +121,7 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
                   Text('How would you label this moment?', style: AppTypography.section),
                   const SizedBox(height: AppSpacing.sm),
                   DropdownButtonFormField<String>(
-                    value: _moodLabel,
+                    initialValue: _moodLabel,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                     ),

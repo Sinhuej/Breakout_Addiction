@@ -62,13 +62,13 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (context) {
+      builder: (sheetContext) {
         return Padding(
           padding: EdgeInsets.fromLTRB(
             AppSpacing.lg,
             AppSpacing.lg,
             AppSpacing.lg,
-            MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
+            MediaQuery.of(sheetContext).viewInsets.bottom + AppSpacing.lg,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -97,24 +97,26 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                 onPressed: () async {
                   final value = controller.text.trim();
                   if (value.length < 4) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    ScaffoldMessenger.of(sheetContext).showSnackBar(
                       const SnackBar(content: Text('Use at least 4 digits or characters.')),
                     );
                     return;
                   }
 
                   await _repository.savePasscode(value);
+
                   if (!mounted) {
                     return;
                   }
 
                   await _saveSettings(_settings.copyWith(hasPasscode: true));
-                  if (!mounted) {
+
+                  if (!mounted || !sheetContext.mounted) {
                     return;
                   }
 
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(this.context).showSnackBar(
+                  Navigator.of(sheetContext).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Passcode saved.')),
                   );
                 },
@@ -168,9 +170,9 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(
-        appBar: AppBar(title: Text('Privacy Lock Mode')),
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        appBar: AppBar(title: const Text('Privacy Lock Mode')),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 

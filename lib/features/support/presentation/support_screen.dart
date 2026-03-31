@@ -87,9 +87,9 @@ class _SupportScreenState extends State<SupportScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(
-        appBar: AppBar(title: Text('Support')),
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        appBar: AppBar(title: const Text('Support')),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -134,7 +134,7 @@ class _SupportScreenState extends State<SupportScreen> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 DropdownButtonFormField<String>(
-                  value: _religion,
+                  initialValue: _religion,
                   decoration: const InputDecoration(
                     labelText: 'Faith / Religion Preference',
                     border: OutlineInputBorder(),
