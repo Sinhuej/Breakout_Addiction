@@ -46,3 +46,14 @@ jobs:
 
       - name: Build APK
         run: flutter build apk --release
+
+      - name: List build outputs
+        run: find build -maxdepth 7 -type f | sort
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: breakout-addiction-apk
+          path: build/app/outputs/**/*.apk
+          if-no-files-found: error
+          retention-days: 7
