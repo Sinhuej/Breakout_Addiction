@@ -13,28 +13,37 @@ void main() {
   final Map<String, String> secureStorage = <String, String>{};
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'onboarding_completed': true,
+      'quote_mode': 'recovery',
+      'quote_religion': 'Christian',
+      'privacy_neutral_mode': false,
+    });
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(secureStorageChannel, (MethodCall call) async {
+      final args = call.arguments;
+      final Map<dynamic, dynamic> map =
+          args is Map ? args : <dynamic, dynamic>{};
+
       switch (call.method) {
         case 'read':
-          final String key = call.arguments['key'] as String;
+          final String key = map['key'] as String;
           return secureStorage[key];
         case 'write':
-          final String key = call.arguments['key'] as String;
-          final String value = call.arguments['value'] as String;
+          final String key = map['key'] as String;
+          final String value = map['value'] as String;
           secureStorage[key] = value;
           return null;
         case 'delete':
-          final String key = call.arguments['key'] as String;
+          final String key = map['key'] as String;
           secureStorage.remove(key);
           return null;
         case 'deleteAll':
           secureStorage.clear();
           return null;
         case 'containsKey':
-          final String key = call.arguments['key'] as String;
+          final String key = map['key'] as String;
           return secureStorage.containsKey(key);
         case 'readAll':
           return secureStorage;
