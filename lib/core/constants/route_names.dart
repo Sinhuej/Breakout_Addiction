@@ -1,5 +1,6 @@
 class RouteNames {
   static const home = '/';
+  static const onboarding = '/onboarding';
   static const rescue = '/rescue';
   static const logHub = '/log';
   static const moodLog = '/log/mood';
