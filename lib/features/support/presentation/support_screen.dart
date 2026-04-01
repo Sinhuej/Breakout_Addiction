@@ -347,7 +347,7 @@ class _SupportScreenState extends State<SupportScreen> {
                 Text('Daily Encouragement', style: AppTypography.section),
                 const SizedBox(height: AppSpacing.sm),
                 const Text(
-                  'Choose the tone you want on the Home screen.',
+                  'Choose the tone and faith layer you want on the Home screen.',
                   style: AppTypography.muted,
                 ),
                 const SizedBox(height: AppSpacing.md),

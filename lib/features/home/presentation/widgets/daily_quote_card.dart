@@ -79,6 +79,13 @@ class DailyQuoteCard extends StatelessWidget {
                 quote.focusLine,
                 style: AppTypography.muted,
               ),
+              if (quote.wisdomLine != null && quote.wisdomLine!.trim().isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  quote.wisdomLine!,
+                  style: AppTypography.body,
+                ),
+              ],
               const SizedBox(height: AppSpacing.sm),
               Wrap(
                 spacing: 8,
