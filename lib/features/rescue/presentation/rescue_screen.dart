@@ -5,6 +5,10 @@ import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/route_names.dart';
 import '../../../core/widgets/info_card.dart';
 import '../../../core/widgets/primary_button.dart';
+import 'widgets/breathing_card.dart';
+import 'widgets/delay_actions_card.dart';
+import 'widgets/reasons_to_stop_card.dart';
+import 'widgets/stage_aware_suggestion_card.dart';
 
 class RescueScreen extends StatelessWidget {
   const RescueScreen({super.key});
@@ -36,36 +40,19 @@ class RescueScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            InfoCard(
-              child: Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  OutlinedButton(onPressed: () {}, child: const Text('Delay 3 min')),
-                  OutlinedButton(onPressed: () {}, child: const Text('Delay 10 min')),
-                  OutlinedButton(onPressed: () {}, child: const Text('Delay 15 min')),
-                  OutlinedButton(onPressed: () {}, child: const Text('Breathe with me')),
-                  OutlinedButton(onPressed: () {}, child: const Text('Leave this room')),
-                ],
-              ),
-            ),
+            const DelayActionsCard(),
             const SizedBox(height: AppSpacing.md),
-            const InfoCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Reasons to Stop', style: AppTypography.section),
-                  SizedBox(height: AppSpacing.sm),
-                  Text('Self-respect • mental clarity • relationships • peace', style: AppTypography.body),
-                ],
-              ),
-            ),
+            const BreathingCard(),
+            const SizedBox(height: AppSpacing.md),
+            const StageAwareSuggestionCard(),
+            const SizedBox(height: AppSpacing.md),
+            const ReasonsToStopCard(),
             const SizedBox(height: AppSpacing.md),
             InfoCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Support Actions', style: AppTypography.section),
+                  Text('Support Actions', style: AppTypography.section),
                   const SizedBox(height: AppSpacing.sm),
                   PrimaryButton(
                     label: 'Open Support',

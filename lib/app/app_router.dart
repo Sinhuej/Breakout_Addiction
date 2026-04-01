@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/constants/route_names.dart';
 import '../features/cycle/domain/cycle_stage.dart';
 import '../features/cycle/presentation/cycle_screen.dart';
+import '../features/educate/presentation/educate_screen.dart';
 import '../features/insights/presentation/insights_screen.dart';
 import '../features/log/presentation/cycle_stage_log_screen.dart';
 import '../features/log/presentation/log_hub_screen.dart';
@@ -70,6 +71,13 @@ class AppRouter {
           builder: (_) => const ProtectedRouteGate(
             scope: LockScope.insights,
             child: InsightsScreen(),
+          ),
+        );
+      case RouteNames.educate:
+        return MaterialPageRoute(
+          builder: (_) => const ProtectedRouteGate(
+            scope: LockScope.app,
+            child: EducateScreen(),
           ),
         );
       case RouteNames.support:

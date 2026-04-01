@@ -6,6 +6,8 @@ class RouteNames {
   static const moodLog = '/log/mood';
   static const cycleStageLog = '/log/cycle-stage';
   static const insights = '/insights';
+  static const educate = '/educate';
+  static const educateLesson = '/educate/lesson';
   static const support = '/support';
   static const cycle = '/cycle';
   static const privacySettings = '/privacy';
