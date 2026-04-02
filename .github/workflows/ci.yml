@@ -44,6 +44,80 @@ jobs:
       - name: Run tests
         run: flutter test
 
+      - name: Enable Android desugaring for notifications
+        run: |
+          python3 - <<'PY2'
+          from pathlib import Path
+
+          groovy = Path('android/app/build.gradle')
+          kts = Path('android/app/build.gradle.kts')
+
+          if groovy.exists():
+              text = groovy.read_text(encoding='utf-8')
+
+              if 'coreLibraryDesugaringEnabled true' not in text:
+                  if 'compileOptions {' in text:
+                      text = text.replace(
+                          'compileOptions {\n',
+                          'compileOptions {\n        coreLibraryDesugaringEnabled true\n',
+                          1,
+                      )
+                  elif 'android {\n' in text:
+                      text = text.replace(
+                          'android {\n',
+                          'android {\n    compileOptions {\n        coreLibraryDesugaringEnabled true\n        sourceCompatibility JavaVersion.VERSION_1_8\n        targetCompatibility JavaVersion.VERSION_1_8\n    }\n',
+                          1,
+                      )
+
+              if "coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'" not in text:
+                  if 'dependencies {' in text:
+                      text = text.replace(
+                          'dependencies {\n',
+                          "dependencies {\n    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'\n",
+                          1,
+                      )
+                  else:
+                      text += "\n\ndependencies {\n    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'\n}\n"
+
+              groovy.write_text(text, encoding='utf-8')
+              print(f'Patched {groovy}')
+
+          elif kts.exists():
+              text = kts.read_text(encoding='utf-8')
+
+              if 'isCoreLibraryDesugaringEnabled = true' not in text:
+                  if 'compileOptions {' in text:
+                      text = text.replace(
+                          'compileOptions {\n',
+                          'compileOptions {\n        isCoreLibraryDesugaringEnabled = true\n',
+                          1,
+                      )
+                  elif 'android {\n' in text:
+                      text = text.replace(
+                          'android {\n',
+                          'android {\n    compileOptions {\n        isCoreLibraryDesugaringEnabled = true\n        sourceCompatibility = JavaVersion.VERSION_1_8\n        targetCompatibility = JavaVersion.VERSION_1_8\n    }\n',
+                          1,
+                      )
+
+              if 'coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")' not in text:
+                  if 'dependencies {' in text:
+                      text = text.replace(
+                          'dependencies {\n',
+                          'dependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")\n',
+                          1,
+                      )
+                  else:
+                      text += '\n\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")\n}\n'
+
+              kts.write_text(text, encoding='utf-8')
+              print(f'Patched {kts}')
+
+          else:
+              raise SystemExit('android/app/build.gradle(.kts) not found in CI workspace')
+          PY2
+
+          grep -n "coreLibraryDesugaring\|desugar_jdk_libs\|compileOptions" android/app/build.gradle android/app/build.gradle.kts 2>/dev/null || true
+
       - name: Build APK
         run: flutter build apk --release
 
