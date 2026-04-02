@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_typography.dart';
-import '../../../core/constants/route_names.dart';
 import '../../../core/widgets/info_card.dart';
 import '../data/widget_snapshot_repository.dart';
 import '../domain/widget_snapshot.dart';
