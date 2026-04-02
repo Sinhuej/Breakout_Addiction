@@ -353,6 +353,15 @@ class _SupportScreenState extends State<SupportScreen> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 PrimaryButton(
+                  label: 'Open Risk Windows',
+                  icon: Icons.schedule_outlined,
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    RouteNames.riskWindows,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                PrimaryButton(
                   label: 'Open Feature Controls',
                   icon: Icons.tune_outlined,
                   onPressed: () => Navigator.pushNamed(
