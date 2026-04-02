@@ -18,4 +18,5 @@ class RouteNames {
   static const cycle = '/cycle';
   static const privacySettings = '/privacy';
   static const featureControls = '/feature-controls';
+  static const aboutBreakout = '/about-breakout';
 }

@@ -148,6 +148,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       label: const Text('Open Widget Preview'),
                     ),
                   ),
+                  const SizedBox(height: AppSpacing.sm),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.pushNamed(
+                        context,
+                        RouteNames.aboutBreakout,
+                      ),
+                      icon: const Icon(Icons.info_outline),
+                      label: const Text('About Breakout'),
+                    ),
+                  ),
                 ],
               ),
             ),

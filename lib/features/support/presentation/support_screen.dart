@@ -359,6 +359,15 @@ class _SupportScreenState extends State<SupportScreen> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 PrimaryButton(
+                  label: 'About Breakout',
+                  icon: Icons.info_outline,
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    RouteNames.aboutBreakout,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                PrimaryButton(
                   label: 'Open AI Recovery Coach',
                   icon: Icons.psychology_outlined,
                   onPressed: () => Navigator.pushNamed(

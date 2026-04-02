@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/constants/route_names.dart';
+import '../features/about/presentation/about_breakout_screen.dart';
 import '../features/ai_chat/presentation/ai_chat_screen.dart';
 import '../features/cycle/domain/cycle_stage.dart';
 import '../features/cycle/presentation/cycle_screen.dart';
@@ -113,6 +114,13 @@ class AppRouter {
           builder: (_) => const ProtectedRouteGate(
             scope: LockScope.support,
             child: FeatureControlsScreen(),
+          ),
+        );
+      case RouteNames.aboutBreakout:
+        return MaterialPageRoute(
+          builder: (_) => const ProtectedRouteGate(
+            scope: LockScope.support,
+            child: AboutBreakoutScreen(),
           ),
         );
       case RouteNames.riskWindows:
