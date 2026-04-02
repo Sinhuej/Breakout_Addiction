@@ -27,8 +27,8 @@ class OnboardingState {
       primaryGoal: 'Break the cycle earlier',
       quoteMode: QuoteMode.recovery,
       religionPreference: 'Christian',
-      topTriggers: const <String>[],
-      riskyTimes: const <String>[],
+      topTriggers: <String>[],
+      riskyTimes: <String>[],
       trustedContactName: '',
       trustedContactPhone: '',
     );
