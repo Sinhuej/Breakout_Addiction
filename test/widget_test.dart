@@ -14,36 +14,35 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{
-      'onboarding_completed': true,
-      'quote_mode': 'recovery',
-      'quote_religion': 'Christian',
-      'privacy_neutral_mode': false,
+      'feature_show_startup_notice': false,
+      'premium_plan': 'plus',
+      'premium_upgrade_prompts': true,
+      'feature_faith_layer_enabled': true,
+      'feature_ai_chat_enabled': true,
+      'feature_ai_guidance_enabled': true,
+      'feature_remote_ai_enabled': false,
     });
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(secureStorageChannel, (MethodCall call) async {
-      final args = call.arguments;
-      final Map<dynamic, dynamic> map =
-          args is Map ? args : <dynamic, dynamic>{};
-
       switch (call.method) {
         case 'read':
-          final String key = map['key'] as String;
+          final String key = call.arguments['key'] as String;
           return secureStorage[key];
         case 'write':
-          final String key = map['key'] as String;
-          final String value = map['value'] as String;
+          final String key = call.arguments['key'] as String;
+          final String value = call.arguments['value'] as String;
           secureStorage[key] = value;
           return null;
         case 'delete':
-          final String key = map['key'] as String;
+          final String key = call.arguments['key'] as String;
           secureStorage.remove(key);
           return null;
         case 'deleteAll':
           secureStorage.clear();
           return null;
         case 'containsKey':
-          final String key = map['key'] as String;
+          final String key = call.arguments['key'] as String;
           return secureStorage.containsKey(key);
         case 'readAll':
           return secureStorage;
@@ -59,12 +58,13 @@ void main() {
     secureStorage.clear();
   });
 
-  testWidgets('BreakoutApp renders home shell', (WidgetTester tester) async {
+  testWidgets('BreakoutApp renders polished home shell', (WidgetTester tester) async {
     await tester.pumpWidget(const BreakoutApp());
     await tester.pumpAndSettle();
 
     expect(find.text('Breakout Addiction'), findsOneWidget);
     expect(find.text('Break the cycle earlier.'), findsOneWidget);
-    expect(find.text('Daily Focus'), findsOneWidget);
+    expect(find.text('Demo Readiness'), findsOneWidget);
+    expect(find.text('Local Premium Guidance'), findsOneWidget);
   });
 }

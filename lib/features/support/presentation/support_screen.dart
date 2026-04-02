@@ -348,10 +348,25 @@ class _SupportScreenState extends State<SupportScreen> {
                 Text('Feature Choices', style: AppTypography.section),
                 const SizedBox(height: AppSpacing.sm),
                 const Text(
+                  'These controls make it easy to demo local-only behavior, reminders, widget entry, or the optional AI layer without guessing what is turned on.',
+                  style: AppTypography.muted,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.sm),
+                const Text(
                   'You can keep things simple and local, or turn on optional features later. Nothing is forced.',
                   style: AppTypography.muted,
                 ),
                 const SizedBox(height: AppSpacing.md),
+                PrimaryButton(
+                  label: 'Open AI Recovery Coach',
+                  icon: Icons.psychology_outlined,
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    RouteNames.aiChat,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
                 PrimaryButton(
                   label: 'Open Widget Preview',
                   icon: Icons.widgets_outlined,

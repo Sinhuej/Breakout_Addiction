@@ -6,6 +6,7 @@ import '../../../core/widgets/info_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../settings/data/feature_control_settings_repository.dart';
 import 'widgets/daily_quote_card.dart';
+import 'widgets/demo_readiness_card.dart';
 import 'widgets/entry_status_card.dart';
 import 'widgets/home_hero_card.dart';
 import 'widgets/premium_guidance_card.dart';
@@ -105,6 +106,8 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: AppSpacing.md),
             const EntryStatusCard(),
             const SizedBox(height: AppSpacing.md),
+            const DemoReadinessCard(),
+            const SizedBox(height: AppSpacing.md),
             const DailyQuoteCard(),
             const SizedBox(height: AppSpacing.md),
             const PremiumGuidanceCard(),
@@ -122,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Text('Keep Building'),
                   const SizedBox(height: AppSpacing.sm),
                   const Text(
-                    'Use Learn for deeper understanding, Support for your personal plan, and Widget Preview to test quick app-entry flows.',
+                    'Use Learn for deeper understanding, Support for your plan, and Widget Preview for quick-entry demo flows.',
                   ),
                   const SizedBox(height: AppSpacing.md),
                   PrimaryButton(
