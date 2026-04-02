@@ -260,6 +260,12 @@ class _SupportScreenState extends State<SupportScreen> {
                 Text('Emergency Help', style: AppTypography.section),
                 const SizedBox(height: AppSpacing.sm),
                 const Text(
+                  'If AI ever feels confusing, inadequate, or too slow for the moment, leave chat and use human support instead.',
+                  style: AppTypography.muted,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.sm),
+                const Text(
                   'Fast access to crisis support and trusted people.',
                   style: AppTypography.muted,
                 ),

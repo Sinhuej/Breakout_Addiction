@@ -334,6 +334,11 @@ class _PremiumScreenState extends State<PremiumScreen> {
           Text('Breakout Premium', style: AppTypography.title),
           const SizedBox(height: AppSpacing.xs),
           const Text(
+            'You will always be able to see whether AI is local, stubbed, or live prototype. Emergencies should leave chat and go to human support immediately.',
+            style: AppTypography.muted,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          const Text(
             'Choose the tier and feature comfort level that fits you best.',
             style: AppTypography.muted,
           ),

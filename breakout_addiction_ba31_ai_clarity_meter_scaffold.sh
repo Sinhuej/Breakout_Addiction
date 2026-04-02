@@ -1,3 +1,276 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(pwd)"
+
+echo "==> Applying Breakout Addiction BA-31 AI clarity, usage meter, and emergency fallback scaffold in: $ROOT_DIR"
+
+mkdir -p \
+  lib/features/ai_chat/domain \
+  lib/features/ai_chat/data \
+  lib/features/ai_chat/presentation/widgets \
+  tools
+
+cat > lib/features/ai_chat/domain/ai_usage_snapshot.dart <<'EOD'
+class AiUsageSnapshot {
+  final int promptAttempts;
+  final int stoppedAttempts;
+  final int livePrototypeCalls;
+  final int localOrStubReplies;
+  final String lastModeLabel;
+
+  const AiUsageSnapshot({
+    required this.promptAttempts,
+    required this.stoppedAttempts,
+    required this.livePrototypeCalls,
+    required this.localOrStubReplies,
+    required this.lastModeLabel,
+  });
+
+  factory AiUsageSnapshot.empty() {
+    return const AiUsageSnapshot(
+      promptAttempts: 0,
+      stoppedAttempts: 0,
+      livePrototypeCalls: 0,
+      localOrStubReplies: 0,
+      lastModeLabel: 'No activity yet',
+    );
+  }
+}
+EOD
+
+cat > lib/features/ai_chat/data/ai_usage_repository.dart <<'EOD'
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../domain/ai_usage_snapshot.dart';
+
+class AiUsageRepository {
+  static const String _promptAttemptsKey = 'ai_usage_prompt_attempts';
+  static const String _stoppedAttemptsKey = 'ai_usage_stopped_attempts';
+  static const String _livePrototypeCallsKey = 'ai_usage_live_prototype_calls';
+  static const String _localOrStubRepliesKey = 'ai_usage_local_or_stub_replies';
+  static const String _lastModeLabelKey = 'ai_usage_last_mode_label';
+
+  Future<AiUsageSnapshot> getSnapshot() async {
+    final prefs = await SharedPreferences.getInstance();
+    return AiUsageSnapshot(
+      promptAttempts: prefs.getInt(_promptAttemptsKey) ?? 0,
+      stoppedAttempts: prefs.getInt(_stoppedAttemptsKey) ?? 0,
+      livePrototypeCalls: prefs.getInt(_livePrototypeCallsKey) ?? 0,
+      localOrStubReplies: prefs.getInt(_localOrStubRepliesKey) ?? 0,
+      lastModeLabel: prefs.getString(_lastModeLabelKey) ?? 'No activity yet',
+    );
+  }
+
+  Future<void> recordStoppedAttempt({
+    required String modeLabel,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(
+      _promptAttemptsKey,
+      (prefs.getInt(_promptAttemptsKey) ?? 0) + 1,
+    );
+    await prefs.setInt(
+      _stoppedAttemptsKey,
+      (prefs.getInt(_stoppedAttemptsKey) ?? 0) + 1,
+    );
+    await prefs.setString(_lastModeLabelKey, modeLabel);
+  }
+
+  Future<void> recordSuccessfulReply({
+    required String modeLabel,
+    required bool livePrototype,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(
+      _promptAttemptsKey,
+      (prefs.getInt(_promptAttemptsKey) ?? 0) + 1,
+    );
+
+    if (livePrototype) {
+      await prefs.setInt(
+        _livePrototypeCallsKey,
+        (prefs.getInt(_livePrototypeCallsKey) ?? 0) + 1,
+      );
+    } else {
+      await prefs.setInt(
+        _localOrStubRepliesKey,
+        (prefs.getInt(_localOrStubRepliesKey) ?? 0) + 1,
+      );
+    }
+
+    await prefs.setString(_lastModeLabelKey, modeLabel);
+  }
+
+  Future<void> clear() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_promptAttemptsKey);
+    await prefs.remove(_stoppedAttemptsKey);
+    await prefs.remove(_livePrototypeCallsKey);
+    await prefs.remove(_localOrStubRepliesKey);
+    await prefs.remove(_lastModeLabelKey);
+  }
+}
+EOD
+cat > lib/features/ai_chat/presentation/widgets/ai_mode_clarity_card.dart <<'EOD'
+import 'package:flutter/material.dart';
+
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../core/widgets/info_card.dart';
+
+class AiModeClarityCard extends StatelessWidget {
+  final String modeLabel;
+  final String summaryLine;
+  final List<String> blockers;
+
+  const AiModeClarityCard({
+    super.key,
+    required this.modeLabel,
+    required this.summaryLine,
+    required this.blockers,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InfoCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Current AI State', style: AppTypography.section),
+          const SizedBox(height: AppSpacing.sm),
+          Chip(label: Text(modeLabel)),
+          const SizedBox(height: AppSpacing.sm),
+          Text(summaryLine, style: AppTypography.muted),
+          if (blockers.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            for (final line in blockers)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text('• $line', style: AppTypography.body),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+EOD
+
+cat > lib/features/ai_chat/presentation/widgets/ai_usage_meter_card.dart <<'EOD'
+import 'package:flutter/material.dart';
+
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../core/widgets/info_card.dart';
+import '../../domain/ai_usage_snapshot.dart';
+
+class AiUsageMeterCard extends StatelessWidget {
+  final AiUsageSnapshot snapshot;
+  final VoidCallback onReset;
+
+  const AiUsageMeterCard({
+    super.key,
+    required this.snapshot,
+    required this.onReset,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InfoCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('AI Usage Meter', style: AppTypography.section),
+          const SizedBox(height: AppSpacing.sm),
+          Text('Prompt attempts: ${snapshot.promptAttempts}', style: AppTypography.body),
+          const SizedBox(height: 4),
+          Text('Stopped attempts: ${snapshot.stoppedAttempts}', style: AppTypography.body),
+          const SizedBox(height: 4),
+          Text('Live prototype calls: ${snapshot.livePrototypeCalls}', style: AppTypography.body),
+          const SizedBox(height: 4),
+          Text('Local or stub replies: ${snapshot.localOrStubReplies}', style: AppTypography.body),
+          const SizedBox(height: 4),
+          Text('Last mode: ${snapshot.lastModeLabel}', style: AppTypography.muted),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: onReset,
+              icon: const Icon(Icons.refresh_outlined),
+              label: const Text('Reset Usage Meter'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+EOD
+
+cat > lib/features/ai_chat/presentation/widgets/emergency_fallback_card.dart <<'EOD'
+import 'package:flutter/material.dart';
+
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../core/widgets/info_card.dart';
+import '../../../../core/widgets/primary_button.dart';
+
+class EmergencyFallbackCard extends StatelessWidget {
+  final VoidCallback onCall988;
+  final VoidCallback onText988;
+  final VoidCallback onOpenSupport;
+
+  const EmergencyFallbackCard({
+    super.key,
+    required this.onCall988,
+    required this.onText988,
+    required this.onOpenSupport,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InfoCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Emergency Fallback', style: AppTypography.section),
+          const SizedBox(height: AppSpacing.sm),
+          const Text(
+            'AI chat is not the right tool for emergencies. If you might hurt yourself or someone else, leave chat and get human support now.',
+            style: AppTypography.muted,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          PrimaryButton(
+            label: 'Call 988',
+            icon: Icons.call_outlined,
+            onPressed: onCall988,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: onText988,
+              icon: const Icon(Icons.sms_outlined),
+              label: const Text('Text 988'),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: onOpenSupport,
+              icon: const Icon(Icons.support_agent_outlined),
+              label: const Text('Open Support'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+EOD
+cat > lib/features/ai_chat/presentation/ai_chat_screen.dart <<'EOD'
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -561,3 +834,101 @@ class _AiChatScreenState extends State<AiChatScreen> {
     );
   }
 }
+EOD
+python3 - <<'EOD'
+from pathlib import Path
+
+premium_path = Path('lib/features/premium/presentation/premium_screen.dart')
+premium_text = premium_path.read_text(encoding='utf-8')
+
+needle = "Text('Breakout Premium', style: AppTypography.title),"
+insert = """Text('Breakout Premium', style: AppTypography.title),
+          const SizedBox(height: AppSpacing.xs),
+          const Text(
+            'You will always be able to see whether AI is local, stubbed, or live prototype. Emergencies should leave chat and go to human support immediately.',
+            style: AppTypography.muted,
+          ),"""
+
+if needle in premium_text:
+    premium_text = premium_text.replace(needle, insert, 1)
+
+premium_path.write_text(premium_text, encoding='utf-8')
+print('Patched premium_screen.dart')
+
+support_path = Path('lib/features/support/presentation/support_screen.dart')
+support_text = support_path.read_text(encoding='utf-8')
+
+anchor = "Text('Emergency Help', style: AppTypography.section),"
+replacement = """Text('Emergency Help', style: AppTypography.section),
+                const SizedBox(height: AppSpacing.sm),
+                const Text(
+                  'If AI ever feels confusing, inadequate, or too slow for the moment, leave chat and use human support instead.',
+                  style: AppTypography.muted,
+                ),
+                const SizedBox(height: AppSpacing.sm),"""
+
+if anchor in support_text:
+    support_text = support_text.replace(anchor, replacement, 1)
+
+support_path.write_text(support_text, encoding='utf-8')
+print('Patched support_screen.dart')
+EOD
+cat > tools/verify_ba31.py <<'EOD'
+from pathlib import Path
+import sys
+
+REQUIRED = [
+    'lib/features/ai_chat/domain/ai_usage_snapshot.dart',
+    'lib/features/ai_chat/data/ai_usage_repository.dart',
+    'lib/features/ai_chat/presentation/widgets/ai_mode_clarity_card.dart',
+    'lib/features/ai_chat/presentation/widgets/ai_usage_meter_card.dart',
+    'lib/features/ai_chat/presentation/widgets/emergency_fallback_card.dart',
+    'lib/features/ai_chat/presentation/ai_chat_screen.dart',
+    'lib/features/premium/presentation/premium_screen.dart',
+    'lib/features/support/presentation/support_screen.dart',
+]
+
+REQUIRED_TEXT = {
+    'lib/features/ai_chat/domain/ai_usage_snapshot.dart': 'class AiUsageSnapshot',
+    'lib/features/ai_chat/data/ai_usage_repository.dart': 'recordSuccessfulReply',
+    'lib/features/ai_chat/presentation/widgets/ai_mode_clarity_card.dart': 'Current AI State',
+    'lib/features/ai_chat/presentation/widgets/ai_usage_meter_card.dart': 'AI Usage Meter',
+    'lib/features/ai_chat/presentation/widgets/emergency_fallback_card.dart': 'Emergency Fallback',
+    'lib/features/ai_chat/presentation/ai_chat_screen.dart': 'AI usage meter reset.',
+    'lib/features/premium/presentation/premium_screen.dart': 'whether AI is local, stubbed, or live prototype',
+    'lib/features/support/presentation/support_screen.dart': 'leave chat and use human support instead',
+}
+
+def main() -> int:
+    root = Path.cwd()
+
+    missing = [path for path in REQUIRED if not (root / path).exists()]
+    if missing:
+        print('Missing files:')
+        for item in missing:
+            print(f' - {item}')
+        return 1
+
+    bad = []
+    for path, needle in REQUIRED_TEXT.items():
+        text = (root / path).read_text(encoding='utf-8')
+        if needle not in text:
+            bad.append((path, needle))
+
+    if bad:
+        print('Content checks failed:')
+        for path, needle in bad:
+            print(f' - {path} missing: {needle}')
+        return 1
+
+    print('Breakout Addiction BA-31 AI clarity, usage meter, and emergency fallback verification passed.')
+    print(f'Checked {len(REQUIRED)} files and {len(REQUIRED_TEXT)} content rules.')
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())
+EOD
+
+echo "==> BA-31 AI clarity, usage meter, and emergency fallback scaffold written."
+echo "==> Running Python verification..."
+python3 tools/verify_ba31.py
