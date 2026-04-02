@@ -8,6 +8,7 @@ import '../features/insights/presentation/insights_screen.dart';
 import '../features/log/presentation/cycle_stage_log_screen.dart';
 import '../features/log/presentation/log_hub_screen.dart';
 import '../features/log/presentation/mood_log_screen.dart';
+import '../features/log/presentation/recovery_event_log_screen.dart';
 import '../features/onboarding/presentation/home_entry_screen.dart';
 import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/privacy/domain/lock_scope.dart';
@@ -15,9 +16,9 @@ import '../features/privacy/presentation/privacy_settings_screen.dart';
 import '../features/privacy/presentation/protected_route_gate.dart';
 import '../features/rescue/presentation/rescue_screen.dart';
 import '../features/risk/presentation/risk_windows_screen.dart';
+import '../features/support/presentation/recovery_plan_screen.dart';
 import '../features/support/presentation/support_screen.dart';
 import '../features/widget/presentation/widget_preview_screen.dart';
-import '../features/support/presentation/recovery_plan_screen.dart';
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -67,6 +68,13 @@ class AppRouter {
           builder: (_) => ProtectedRouteGate(
             scope: LockScope.logs,
             child: CycleStageLogScreen(initialStage: stage),
+          ),
+        );
+      case RouteNames.recoveryEventLog:
+        return MaterialPageRoute(
+          builder: (_) => const ProtectedRouteGate(
+            scope: LockScope.logs,
+            child: RecoveryEventLogScreen(),
           ),
         );
       case RouteNames.insights:

@@ -5,6 +5,7 @@ class RouteNames {
   static const logHub = '/log';
   static const moodLog = '/log/mood';
   static const cycleStageLog = '/log/cycle-stage';
+  static const recoveryEventLog = '/log/recovery-event';
   static const insights = '/insights';
   static const educate = '/educate';
   static const educateLesson = '/educate/lesson';
