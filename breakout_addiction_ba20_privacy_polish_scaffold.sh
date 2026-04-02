@@ -1,3 +1,220 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(pwd)"
+
+echo "==> Applying Breakout Addiction BA-20 privacy polish scaffold in: $ROOT_DIR"
+
+mkdir -p \
+  lib/features/privacy/domain \
+  lib/features/privacy/presentation/widgets \
+  tools
+
+cat > lib/features/privacy/domain/privacy_status_snapshot.dart <<'EOD'
+class PrivacyStatusSnapshot {
+  final bool lockEnabled;
+  final bool hasPasscode;
+  final int protectedAreaCount;
+  final bool rescueBypassEnabled;
+  final bool neutralModeEnabled;
+  final bool biometricsEnabled;
+
+  const PrivacyStatusSnapshot({
+    required this.lockEnabled,
+    required this.hasPasscode,
+    required this.protectedAreaCount,
+    required this.rescueBypassEnabled,
+    required this.neutralModeEnabled,
+    required this.biometricsEnabled,
+  });
+
+  String get lockLabel => lockEnabled ? 'Enabled' : 'Disabled';
+  String get passcodeLabel => hasPasscode ? 'Set' : 'Not set';
+  String get rescueLabel => rescueBypassEnabled ? 'Allowed' : 'Locked';
+  String get neutralLabel => neutralModeEnabled ? 'Neutral labels on' : 'Standard labels on';
+}
+EOD
+
+cat > lib/features/privacy/data/lock_settings_repository.dart <<'EOD'
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../domain/lock_scope.dart';
+import '../domain/lock_settings.dart';
+
+class LockSettingsRepository {
+  static const String _enabledKey = 'privacy_enabled';
+  static const String _scopesKey = 'privacy_scopes';
+  static const String _rescueBypassKey = 'privacy_rescue_bypass';
+  static const String _biometricKey = 'privacy_biometrics';
+  static const String _neutralModeKey = 'privacy_neutral_mode';
+  static const String _passcodeKey = 'privacy_passcode';
+
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+
+  Future<LockSettings> getSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final scopeNames = prefs.getStringList(_scopesKey) ?? <String>[];
+    final hasPasscode = await _secureStorage.read(key: _passcodeKey) != null;
+
+    return LockSettings(
+      isEnabled: prefs.getBool(_enabledKey) ?? false,
+      enabledScopes: scopeNames
+          .map((name) => LockScope.values.byName(name))
+          .toSet(),
+      allowRescueWithoutUnlock: prefs.getBool(_rescueBypassKey) ?? true,
+      useBiometrics: prefs.getBool(_biometricKey) ?? false,
+      hasPasscode: hasPasscode,
+      neutralPrivacyMode: prefs.getBool(_neutralModeKey) ?? true,
+    );
+  }
+
+  Future<void> saveSettings(LockSettings settings) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_enabledKey, settings.isEnabled);
+    await prefs.setStringList(
+      _scopesKey,
+      settings.enabledScopes.map((scope) => scope.name).toList(),
+    );
+    await prefs.setBool(_rescueBypassKey, settings.allowRescueWithoutUnlock);
+    await prefs.setBool(_biometricKey, settings.useBiometrics);
+    await prefs.setBool(_neutralModeKey, settings.neutralPrivacyMode);
+  }
+
+  Future<void> savePasscode(String passcode) async {
+    await _secureStorage.write(key: _passcodeKey, value: passcode);
+  }
+
+  Future<bool> verifyPasscode(String passcode) async {
+    final saved = await _secureStorage.read(key: _passcodeKey);
+    return saved != null && saved == passcode;
+  }
+
+  Future<void> clearPasscode() async {
+    await _secureStorage.delete(key: _passcodeKey);
+  }
+
+  Future<void> resetToSafeDefaults() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_enabledKey, false);
+    await prefs.setStringList(_scopesKey, <String>[]);
+    await prefs.setBool(_rescueBypassKey, true);
+    await prefs.setBool(_biometricKey, false);
+    await prefs.setBool(_neutralModeKey, true);
+  }
+}
+EOD
+
+cat > lib/features/privacy/presentation/widgets/privacy_status_card.dart <<'EOD'
+import 'package:flutter/material.dart';
+
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../core/widgets/info_card.dart';
+import '../../data/lock_settings_repository.dart';
+import '../../domain/privacy_status_snapshot.dart';
+
+class PrivacyStatusCard extends StatelessWidget {
+  const PrivacyStatusCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final repository = LockSettingsRepository();
+
+    return FutureBuilder(
+      future: repository.getSettings(),
+      builder: (context, snapshot) {
+        final settings = snapshot.data;
+        if (settings == null) {
+          return const InfoCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Privacy Status', style: AppTypography.section),
+                SizedBox(height: AppSpacing.sm),
+                Text('Loading privacy status...', style: AppTypography.muted),
+              ],
+            ),
+          );
+        }
+
+        final status = PrivacyStatusSnapshot(
+          lockEnabled: settings.isEnabled,
+          hasPasscode: settings.hasPasscode,
+          protectedAreaCount: settings.enabledScopes.length,
+          rescueBypassEnabled: settings.allowRescueWithoutUnlock,
+          neutralModeEnabled: settings.neutralPrivacyMode,
+          biometricsEnabled: settings.useBiometrics,
+        );
+
+        return InfoCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Privacy Status', style: AppTypography.section),
+              const SizedBox(height: AppSpacing.sm),
+              Text('Lock: ${status.lockLabel}', style: AppTypography.body),
+              const SizedBox(height: 4),
+              Text('Passcode: ${status.passcodeLabel}', style: AppTypography.body),
+              const SizedBox(height: 4),
+              Text(
+                'Protected areas: ${status.protectedAreaCount}',
+                style: AppTypography.body,
+              ),
+              const SizedBox(height: 4),
+              Text('Rescue access: ${status.rescueLabel}', style: AppTypography.body),
+              const SizedBox(height: 4),
+              Text(status.neutralLabel, style: AppTypography.muted),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+EOD
+
+cat > lib/features/privacy/presentation/widgets/neutral_mode_preview_card.dart <<'EOD'
+import 'package:flutter/material.dart';
+
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../core/privacy/neutral_labels.dart';
+import '../../../../core/widgets/info_card.dart';
+
+class NeutralModePreviewCard extends StatelessWidget {
+  final bool neutralMode;
+
+  const NeutralModePreviewCard({
+    super.key,
+    required this.neutralMode,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InfoCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Neutral Label Preview', style: AppTypography.section),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              Chip(label: Text(NeutralLabels.rescuePrimary(neutralMode))),
+              Chip(label: Text(NeutralLabels.moodLog(neutralMode))),
+              Chip(label: Text(NeutralLabels.supportAction(neutralMode))),
+              Chip(label: Text(NeutralLabels.cycleWheelTitle(neutralMode))),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+EOD
+cat > lib/features/privacy/presentation/privacy_settings_screen.dart <<'EOD'
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_spacing.dart';
@@ -361,3 +578,57 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
     );
   }
 }
+EOD
+cat > tools/verify_ba20.py <<'EOD'
+from pathlib import Path
+import sys
+
+REQUIRED = [
+    'lib/features/privacy/domain/privacy_status_snapshot.dart',
+    'lib/features/privacy/data/lock_settings_repository.dart',
+    'lib/features/privacy/presentation/widgets/privacy_status_card.dart',
+    'lib/features/privacy/presentation/widgets/neutral_mode_preview_card.dart',
+    'lib/features/privacy/presentation/privacy_settings_screen.dart',
+]
+
+REQUIRED_TEXT = {
+    'lib/features/privacy/domain/privacy_status_snapshot.dart': 'class PrivacyStatusSnapshot',
+    'lib/features/privacy/data/lock_settings_repository.dart': 'Future<void> resetToSafeDefaults() async {',
+    'lib/features/privacy/presentation/widgets/privacy_status_card.dart': 'Privacy Status',
+    'lib/features/privacy/presentation/widgets/neutral_mode_preview_card.dart': 'Neutral Label Preview',
+    'lib/features/privacy/presentation/privacy_settings_screen.dart': 'Reset Privacy Defaults',
+}
+
+def main() -> int:
+    root = Path.cwd()
+
+    missing = [path for path in REQUIRED if not (root / path).exists()]
+    if missing:
+        print('Missing files:')
+        for item in missing:
+            print(f' - {item}')
+        return 1
+
+    bad = []
+    for path, needle in REQUIRED_TEXT.items():
+        text = (root / path).read_text(encoding='utf-8')
+        if needle not in text:
+            bad.append((path, needle))
+
+    if bad:
+        print('Content checks failed:')
+        for path, needle in bad:
+            print(f' - {path} missing: {needle}')
+        return 1
+
+    print('Breakout Addiction BA-20 privacy polish verification passed.')
+    print(f'Checked {len(REQUIRED)} files and {len(REQUIRED_TEXT)} content rules.')
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())
+EOD
+
+echo "==> BA-20 privacy polish scaffold written."
+echo "==> Running Python verification..."
+python3 tools/verify_ba20.py

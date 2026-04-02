@@ -55,4 +55,13 @@ class LockSettingsRepository {
   Future<void> clearPasscode() async {
     await _secureStorage.delete(key: _passcodeKey);
   }
+
+  Future<void> resetToSafeDefaults() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_enabledKey, false);
+    await prefs.setStringList(_scopesKey, <String>[]);
+    await prefs.setBool(_rescueBypassKey, true);
+    await prefs.setBool(_biometricKey, false);
+    await prefs.setBool(_neutralModeKey, true);
+  }
 }
