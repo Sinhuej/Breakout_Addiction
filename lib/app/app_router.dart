@@ -16,6 +16,8 @@ import '../features/privacy/presentation/protected_route_gate.dart';
 import '../features/rescue/presentation/rescue_screen.dart';
 import '../features/risk/presentation/risk_windows_screen.dart';
 import '../features/support/presentation/support_screen.dart';
+import '../features/widget/presentation/widget_preview_screen.dart';
+import '../features/support/presentation/recovery_plan_screen.dart';
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -86,6 +88,20 @@ class AppRouter {
           builder: (_) => const ProtectedRouteGate(
             scope: LockScope.support,
             child: RiskWindowsScreen(),
+          ),
+        );
+      case RouteNames.recoveryPlan:
+        return MaterialPageRoute(
+          builder: (_) => const ProtectedRouteGate(
+            scope: LockScope.support,
+            child: RecoveryPlanScreen(),
+          ),
+        );
+      case RouteNames.widgetPreview:
+        return MaterialPageRoute(
+          builder: (_) => const ProtectedRouteGate(
+            scope: LockScope.support,
+            child: WidgetPreviewScreen(),
           ),
         );
       case RouteNames.support:

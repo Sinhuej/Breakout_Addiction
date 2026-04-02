@@ -420,6 +420,52 @@ class _SupportScreenState extends State<SupportScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text('Personal Recovery Plan', style: AppTypography.section),
+                const SizedBox(height: AppSpacing.sm),
+                const Text(
+                  'Write down your risky places, your first move, your backup move, and your fallback plan.',
+                  style: AppTypography.muted,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                PrimaryButton(
+                  label: 'Open Recovery Plan',
+                  icon: Icons.assignment_outlined,
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    RouteNames.recoveryPlan,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          InfoCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Home Screen Widget', style: AppTypography.section),
+                const SizedBox(height: AppSpacing.sm),
+                const Text(
+                  'Preview the widget content and keep the Android widget overlay files ready for later native wiring.',
+                  style: AppTypography.muted,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                PrimaryButton(
+                  label: 'Open Widget Preview',
+                  icon: Icons.widgets_outlined,
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    RouteNames.widgetPreview,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          InfoCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text('Privacy & Lock Mode', style: AppTypography.section),
                 const SizedBox(height: AppSpacing.sm),
                 const Text(

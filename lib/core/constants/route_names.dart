@@ -10,6 +10,8 @@ class RouteNames {
   static const educateLesson = '/educate/lesson';
   static const support = '/support';
   static const riskWindows = '/risk-windows';
+  static const recoveryPlan = '/recovery-plan';
+  static const widgetPreview = '/widget-preview';
   static const cycle = '/cycle';
   static const privacySettings = '/privacy';
 }
