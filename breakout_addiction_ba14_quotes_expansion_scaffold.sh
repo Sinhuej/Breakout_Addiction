@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(pwd)"
 
-echo "==> Repairing Breakout Addiction BA-14 quotes expansion in: $ROOT_DIR"
+echo "==> Applying Breakout Addiction BA-14 quotes expansion scaffold in: $ROOT_DIR"
 
 mkdir -p \
   lib/features/quotes/domain \
@@ -163,7 +163,6 @@ class DailyQuoteRepository {
   }
 }
 EOD
-
 cat > lib/features/home/presentation/widgets/daily_quote_card.dart <<'EOD'
 import 'package:flutter/material.dart';
 
@@ -276,14 +275,13 @@ from pathlib import Path
 
 path = Path('lib/features/support/presentation/support_screen.dart')
 text = path.read_text(encoding='utf-8')
-old = "Choose the tone you want on the Home screen."
-new = "Choose the tone and faith layer you want on the Home screen."
+old = 'Choose the tone you want on the Home screen.'
+new = 'Choose the tone and faith layer you want on the Home screen.'
 if old in text:
     text = text.replace(old, new)
 path.write_text(text, encoding='utf-8')
-print("Patched support_screen.dart")
+print('Patched support_screen.dart')
 EOD
-
 cat > tools/verify_ba14.py <<'EOD'
 from pathlib import Path
 import sys
@@ -332,6 +330,6 @@ if __name__ == '__main__':
     sys.exit(main())
 EOD
 
-echo "==> BA-14 quotes expansion repair written."
+echo "==> BA-14 quotes expansion scaffold written."
 echo "==> Running Python verification..."
 python3 tools/verify_ba14.py
