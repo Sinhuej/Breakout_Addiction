@@ -1,37 +1,82 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/route_names.dart';
 import '../../home/presentation/home_screen.dart';
-import '../../privacy/domain/lock_scope.dart';
-import '../../privacy/presentation/protected_route_gate.dart';
+import '../../widget/data/app_entry_repository.dart';
 import '../data/onboarding_repository.dart';
-import 'onboarding_screen.dart';
 
-class HomeEntryScreen extends StatelessWidget {
+class HomeEntryScreen extends StatefulWidget {
   const HomeEntryScreen({super.key});
 
   @override
+  State<HomeEntryScreen> createState() => _HomeEntryScreenState();
+}
+
+class _HomeEntryScreenState extends State<HomeEntryScreen> {
+  final OnboardingRepository _onboardingRepository = OnboardingRepository();
+  final AppEntryRepository _appEntryRepository = AppEntryRepository();
+
+  Widget? _child;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolve();
+  }
+
+  Future<void> _resolve() async {
+    final state = await _onboardingRepository.getState();
+
+    if (!mounted) {
+      return;
+    }
+
+    if (!state.completed) {
+      setState(() {
+        _child = null;
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+        Navigator.pushReplacementNamed(context, RouteNames.onboarding);
+      });
+      return;
+    }
+
+    final pending = await _appEntryRepository.consumePendingEntry();
+
+    if (!mounted) {
+      return;
+    }
+
+    if (pending == null || pending.routeName == RouteNames.home) {
+      setState(() {
+        _child = const HomeScreen();
+      });
+      return;
+    }
+
+    setState(() {
+      _child = null;
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      Navigator.pushReplacementNamed(context, pending.routeName);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final repository = OnboardingRepository();
-
-    return FutureBuilder<bool>(
-      future: repository.isComplete(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        final completed = snapshot.data ?? false;
-        if (!completed) {
-          return const OnboardingScreen();
-        }
-
-        return const ProtectedRouteGate(
-          scope: LockScope.app,
-          child: HomeScreen(),
+    return _child ??
+        const Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(),
+          ),
         );
-      },
-    );
   }
 }

@@ -5,8 +5,8 @@ import '../../../core/constants/route_names.dart';
 import '../../../core/widgets/info_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../settings/data/feature_control_settings_repository.dart';
-import '../../settings/domain/feature_control_settings.dart';
 import 'widgets/daily_quote_card.dart';
+import 'widgets/entry_status_card.dart';
 import 'widgets/home_hero_card.dart';
 import 'widgets/premium_guidance_card.dart';
 import 'widgets/progress_snapshot_card.dart';
@@ -103,6 +103,8 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             const HomeHeroCard(),
             const SizedBox(height: AppSpacing.md),
+            const EntryStatusCard(),
+            const SizedBox(height: AppSpacing.md),
             const DailyQuoteCard(),
             const SizedBox(height: AppSpacing.md),
             const PremiumGuidanceCard(),
@@ -120,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Text('Keep Building'),
                   const SizedBox(height: AppSpacing.sm),
                   const Text(
-                    'Use Learn for deeper understanding and Support for your personal plan, privacy settings, premium choices, and feature controls.',
+                    'Use Learn for deeper understanding, Support for your personal plan, and Widget Preview to test quick app-entry flows.',
                   ),
                   const SizedBox(height: AppSpacing.md),
                   PrimaryButton(
@@ -129,6 +131,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     onPressed: () => Navigator.pushNamed(
                       context,
                       RouteNames.educate,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.pushNamed(
+                        context,
+                        RouteNames.widgetPreview,
+                      ),
+                      icon: const Icon(Icons.widgets_outlined),
+                      label: const Text('Open Widget Preview'),
                     ),
                   ),
                 ],

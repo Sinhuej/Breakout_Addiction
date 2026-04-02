@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_typography.dart';
+import '../../../core/constants/route_names.dart';
 import '../../../core/widgets/info_card.dart';
+import '../data/app_entry_repository.dart';
 import '../data/widget_snapshot_repository.dart';
+import '../domain/widget_entry_action.dart';
 import '../domain/widget_snapshot.dart';
 
 class WidgetPreviewScreen extends StatelessWidget {
@@ -72,6 +75,20 @@ class WidgetPreviewScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _simulateEntry(
+    BuildContext context,
+    WidgetEntryAction action,
+  ) async {
+    final repository = AppEntryRepository();
+    await repository.stageWidgetEntry(action);
+
+    if (!context.mounted) {
+      return;
+    }
+
+    Navigator.pushNamed(context, RouteNames.home);
+  }
+
   @override
   Widget build(BuildContext context) {
     final repository = WidgetSnapshotRepository();
@@ -98,7 +115,7 @@ class WidgetPreviewScreen extends StatelessWidget {
               Text('Home Screen Widget', style: AppTypography.title),
               const SizedBox(height: AppSpacing.xs),
               const Text(
-                'Preview the compact widget cards and use the Android overlay pack when you are ready to wire native files.',
+                'Preview the widget content and simulate a tap path so app entry feels like a real quick-action flow.',
                 style: AppTypography.muted,
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -109,7 +126,7 @@ class WidgetPreviewScreen extends StatelessWidget {
                     Text('How this works', style: AppTypography.section),
                     SizedBox(height: AppSpacing.sm),
                     Text(
-                      'This screen previews the widget content from real app data. The Android-specific files are staged in android_widget_overlay/ so your repo stays safe.',
+                      'This screen previews widget content from real app data. The simulate buttons stage a pending app-entry action and reopen the app flow through Home Entry.',
                       style: AppTypography.muted,
                     ),
                   ],
@@ -119,6 +136,24 @@ class WidgetPreviewScreen extends StatelessWidget {
               _compactWidgetPreview(data),
               const SizedBox(height: AppSpacing.md),
               _riskWidgetPreview(data),
+              const SizedBox(height: AppSpacing.md),
+              FilledButton.icon(
+                onPressed: () => _simulateEntry(context, WidgetEntryAction.openHome),
+                icon: const Icon(Icons.home_outlined),
+                label: const Text('Simulate Widget → Open Breakout'),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              OutlinedButton.icon(
+                onPressed: () => _simulateEntry(context, WidgetEntryAction.openRescue),
+                icon: const Icon(Icons.health_and_safety_outlined),
+                label: const Text('Simulate Widget → Rescue'),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              OutlinedButton.icon(
+                onPressed: () => _simulateEntry(context, WidgetEntryAction.openMoodLog),
+                icon: const Icon(Icons.mood_outlined),
+                label: const Text('Simulate Widget → Log Check-In'),
+              ),
             ],
           );
         },
