@@ -9,6 +9,7 @@ class RouteNames {
   static const insights = '/insights';
   static const educate = '/educate';
   static const educateLesson = '/educate/lesson';
+  static const premium = '/premium';
   static const support = '/support';
   static const riskWindows = '/risk-windows';
   static const recoveryPlan = '/recovery-plan';

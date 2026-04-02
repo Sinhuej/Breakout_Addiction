@@ -466,6 +466,29 @@ class _SupportScreenState extends State<SupportScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text('Premium', style: AppTypography.section),
+                const SizedBox(height: AppSpacing.sm),
+                const Text(
+                  'Premium hooks are ready for deeper learning and future advanced tools without locking core recovery help.',
+                  style: AppTypography.muted,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                PrimaryButton(
+                  label: 'Open Premium',
+                  icon: Icons.workspace_premium_outlined,
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    RouteNames.premium,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          InfoCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text('Privacy & Lock Mode', style: AppTypography.section),
                 const SizedBox(height: AppSpacing.sm),
                 const Text(

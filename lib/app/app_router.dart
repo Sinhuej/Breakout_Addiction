@@ -11,6 +11,7 @@ import '../features/log/presentation/mood_log_screen.dart';
 import '../features/log/presentation/recovery_event_log_screen.dart';
 import '../features/onboarding/presentation/home_entry_screen.dart';
 import '../features/onboarding/presentation/onboarding_screen.dart';
+import '../features/premium/presentation/premium_screen.dart';
 import '../features/privacy/domain/lock_scope.dart';
 import '../features/privacy/presentation/privacy_settings_screen.dart';
 import '../features/privacy/presentation/protected_route_gate.dart';
@@ -110,6 +111,13 @@ class AppRouter {
           builder: (_) => const ProtectedRouteGate(
             scope: LockScope.support,
             child: WidgetPreviewScreen(),
+          ),
+        );
+      case RouteNames.premium:
+        return MaterialPageRoute(
+          builder: (_) => const ProtectedRouteGate(
+            scope: LockScope.support,
+            child: PremiumScreen(),
           ),
         );
       case RouteNames.support:

@@ -4,6 +4,8 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/route_names.dart';
 import '../../../core/widgets/info_card.dart';
+import '../../premium/data/premium_access_repository.dart';
+import '../../premium/presentation/widgets/premium_badge.dart';
 import '../data/lesson_repository.dart';
 import '../domain/lesson.dart';
 import '../domain/lesson_track.dart';
@@ -16,6 +18,7 @@ class EducateScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final repository = LessonRepository();
     final tracks = repository.getTracks();
+    final premiumRepository = PremiumAccessRepository();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Educate Me')),
@@ -33,6 +36,44 @@ class EducateScreen extends StatelessWidget {
             _TrackCard(track: track),
             const SizedBox(height: AppSpacing.md),
           ],
+          FutureBuilder(
+            future: premiumRepository.getStatus(),
+            builder: (context, snapshot) {
+              final status = snapshot.data;
+              if (status == null || !status.showUpgradePrompts) {
+                return const SizedBox.shrink();
+              }
+
+              return InfoCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: const [
+                        Text('Educate Me Plus', style: AppTypography.section),
+                        SizedBox(width: 8),
+                        PremiumBadge(),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    const Text(
+                      'Go deeper into compulsive patterns, emotional drivers, and advanced learning tracks.',
+                      style: AppTypography.muted,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.pushNamed(context, RouteNames.premium),
+                        icon: const Icon(Icons.workspace_premium_outlined),
+                        label: Text(status.isUnlocked ? 'Premium Active' : 'Explore Premium'),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
