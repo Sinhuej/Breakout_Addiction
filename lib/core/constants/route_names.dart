@@ -9,6 +9,7 @@ class RouteNames {
   static const educate = '/educate';
   static const educateLesson = '/educate/lesson';
   static const support = '/support';
+  static const riskWindows = '/risk-windows';
   static const cycle = '/cycle';
   static const privacySettings = '/privacy';
 }

@@ -397,6 +397,29 @@ class _SupportScreenState extends State<SupportScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text('Risk Windows & Reminders', style: AppTypography.section),
+                const SizedBox(height: AppSpacing.sm),
+                const Text(
+                  'Define high-risk time windows and reminder lead times so the app can become more proactive.',
+                  style: AppTypography.muted,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                PrimaryButton(
+                  label: 'Open Risk Windows',
+                  icon: Icons.schedule_outlined,
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    RouteNames.riskWindows,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          InfoCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text('Privacy & Lock Mode', style: AppTypography.section),
                 const SizedBox(height: AppSpacing.sm),
                 const Text(

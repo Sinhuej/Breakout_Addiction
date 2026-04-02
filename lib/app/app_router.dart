@@ -14,6 +14,7 @@ import '../features/privacy/domain/lock_scope.dart';
 import '../features/privacy/presentation/privacy_settings_screen.dart';
 import '../features/privacy/presentation/protected_route_gate.dart';
 import '../features/rescue/presentation/rescue_screen.dart';
+import '../features/risk/presentation/risk_windows_screen.dart';
 import '../features/support/presentation/support_screen.dart';
 
 class AppRouter {
@@ -78,6 +79,13 @@ class AppRouter {
           builder: (_) => const ProtectedRouteGate(
             scope: LockScope.app,
             child: EducateScreen(),
+          ),
+        );
+      case RouteNames.riskWindows:
+        return MaterialPageRoute(
+          builder: (_) => const ProtectedRouteGate(
+            scope: LockScope.support,
+            child: RiskWindowsScreen(),
           ),
         );
       case RouteNames.support:
