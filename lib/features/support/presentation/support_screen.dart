@@ -365,7 +365,7 @@ class _SupportScreenState extends State<SupportScreen> {
                 Text('Premium Options', style: AppTypography.section),
                 const SizedBox(height: AppSpacing.sm),
                 const Text(
-                  'Breakout Plus gives a premium app experience without AI chat. Breakout Plus AI adds optional AI features.',
+                  'Breakout Plus gives curated local guidance and faith-sensitive packs without AI chat. Breakout Plus AI adds optional AI features later.',
                   style: AppTypography.muted,
                 ),
                 const SizedBox(height: AppSpacing.md),

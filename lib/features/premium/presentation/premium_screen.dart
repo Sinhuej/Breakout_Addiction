@@ -513,13 +513,13 @@ class _PremiumScreenState extends State<PremiumScreen> {
           _featureCard(
             title: 'Breakout Plus',
             subtitle:
-                'Premium app experience without AI chat. Strong local-first premium path.',
+                'Breakout Plus includes local premium guidance, deeper quotes, and faith-sensitive packs without AI chat.',
           ),
           const SizedBox(height: AppSpacing.md),
           _featureCard(
             title: 'Breakout Plus AI',
             subtitle:
-                'Everything in Plus, plus optional AI guidance and chat features.',
+                'Everything in Plus, plus optional AI guidance, AI quotes, AI faith-sensitive help, and AI chat features.',
           ),
         ],
       ),
