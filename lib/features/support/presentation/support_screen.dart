@@ -466,6 +466,29 @@ class _SupportScreenState extends State<SupportScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text('AI Recovery Coach', style: AppTypography.section),
+                const SizedBox(height: AppSpacing.sm),
+                const Text(
+                  'Premium prototype chat shell with local history and mock coaching replies. No cloud calls yet.',
+                  style: AppTypography.muted,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                PrimaryButton(
+                  label: 'Open AI Coach',
+                  icon: Icons.smart_toy_outlined,
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    RouteNames.aiChat,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          InfoCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text('Premium', style: AppTypography.section),
                 const SizedBox(height: AppSpacing.sm),
                 const Text(

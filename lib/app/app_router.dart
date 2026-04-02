@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/constants/route_names.dart';
+import '../features/ai_chat/presentation/ai_chat_screen.dart';
 import '../features/cycle/domain/cycle_stage.dart';
 import '../features/cycle/presentation/cycle_screen.dart';
 import '../features/educate/presentation/educate_screen.dart';
@@ -92,6 +93,20 @@ class AppRouter {
             child: EducateScreen(),
           ),
         );
+      case RouteNames.premium:
+        return MaterialPageRoute(
+          builder: (_) => const ProtectedRouteGate(
+            scope: LockScope.support,
+            child: PremiumScreen(),
+          ),
+        );
+      case RouteNames.aiChat:
+        return MaterialPageRoute(
+          builder: (_) => const ProtectedRouteGate(
+            scope: LockScope.support,
+            child: AiChatScreen(),
+          ),
+        );
       case RouteNames.riskWindows:
         return MaterialPageRoute(
           builder: (_) => const ProtectedRouteGate(
@@ -111,13 +126,6 @@ class AppRouter {
           builder: (_) => const ProtectedRouteGate(
             scope: LockScope.support,
             child: WidgetPreviewScreen(),
-          ),
-        );
-      case RouteNames.premium:
-        return MaterialPageRoute(
-          builder: (_) => const ProtectedRouteGate(
-            scope: LockScope.support,
-            child: PremiumScreen(),
           ),
         );
       case RouteNames.support:

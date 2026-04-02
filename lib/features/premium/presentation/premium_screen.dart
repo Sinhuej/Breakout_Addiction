@@ -4,6 +4,8 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/info_card.dart';
 import '../../../core/widgets/primary_button.dart';
+import '../../ai_chat/data/ai_chat_settings_repository.dart';
+import '../../ai_chat/domain/chat_provider_mode.dart';
 import '../data/premium_access_repository.dart';
 import '../domain/premium_status.dart';
 import 'widgets/premium_badge.dart';
@@ -17,8 +19,11 @@ class PremiumScreen extends StatefulWidget {
 
 class _PremiumScreenState extends State<PremiumScreen> {
   final PremiumAccessRepository _repository = PremiumAccessRepository();
+  final AiChatSettingsRepository _chatSettingsRepository =
+      AiChatSettingsRepository();
 
   PremiumStatus _status = PremiumStatus.defaults();
+  ChatProviderMode _providerMode = ChatProviderMode.mock;
   bool _loading = true;
 
   @override
@@ -29,11 +34,15 @@ class _PremiumScreenState extends State<PremiumScreen> {
 
   Future<void> _load() async {
     final status = await _repository.getStatus();
+    final chatSettings = await _chatSettingsRepository.getSettings();
+
     if (!mounted) {
       return;
     }
+
     setState(() {
       _status = status;
+      _providerMode = chatSettings.providerMode;
       _loading = false;
     });
   }
@@ -56,6 +65,17 @@ class _PremiumScreenState extends State<PremiumScreen> {
   Future<void> _togglePrompts(bool value) async {
     await _repository.setUpgradePrompts(value);
     await _load();
+  }
+
+  Future<void> _setProviderMode(ChatProviderMode mode) async {
+    await _chatSettingsRepository.setProviderMode(mode);
+    await _load();
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('AI provider mode set to ${mode.label}.')),
+    );
   }
 
   Widget _featureCard({
@@ -84,8 +104,8 @@ class _PremiumScreenState extends State<PremiumScreen> {
   Widget build(BuildContext context) {
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: Text('Premium')),
-        body: Center(child: CircularProgressIndicator()),
+        appBar: AppBar(title: const Text('Premium')),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -129,6 +149,58 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   subtitle: const Text(
                     'Controls whether soft premium prompts appear in the app.',
                   ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          InfoCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('AI Chat Provider Mode', style: AppTypography.section),
+                const SizedBox(height: AppSpacing.sm),
+                const Text(
+                  'Choose the prototype provider path. Keep using sanitized dummy prompts only until the real privacy-safe backend is ready.',
+                  style: AppTypography.muted,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                DropdownButtonFormField<ChatProviderMode>(
+                  initialValue: _providerMode,
+                  decoration: const InputDecoration(
+                    labelText: 'Provider Mode',
+                  ),
+                  items: ChatProviderMode.values
+                      .map(
+                        (mode) => DropdownMenuItem<ChatProviderMode>(
+                          value: mode,
+                          child: Text(mode.label),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    _setProviderMode(value);
+                  },
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  _providerMode.description,
+                  style: AppTypography.muted,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const InfoCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Prototype AI Guardrails', style: AppTypography.section),
+                SizedBox(height: AppSpacing.sm),
+                Text(
+                  'The current prototype blocks minor sexual content and imminent self-harm or violence language, and scrubs obvious identifying details before prototype processing.',
+                  style: AppTypography.muted,
                 ),
               ],
             ),
