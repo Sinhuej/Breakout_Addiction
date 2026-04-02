@@ -21,6 +21,7 @@ void main() {
       'feature_ai_chat_enabled': true,
       'feature_ai_guidance_enabled': true,
       'feature_remote_ai_enabled': false,
+      'onboarding_completed': true,
     });
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
