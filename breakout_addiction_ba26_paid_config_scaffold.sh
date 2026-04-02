@@ -1,3 +1,216 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(pwd)"
+
+echo "==> Applying Breakout Addiction BA-26 paid config scaffold in: $ROOT_DIR"
+
+mkdir -p \
+  lib/features/ai_chat/domain \
+  lib/features/ai_chat/data \
+  tools
+
+cat > lib/features/ai_chat/domain/chat_provider_mode.dart <<'EOD'
+enum ChatProviderMode {
+  mock,
+  geminiPrototype,
+  vertexPrivateReady,
+}
+
+extension ChatProviderModeX on ChatProviderMode {
+  String get label {
+    switch (this) {
+      case ChatProviderMode.mock:
+        return 'Mock';
+      case ChatProviderMode.geminiPrototype:
+        return 'Gemini Prototype';
+      case ChatProviderMode.vertexPrivateReady:
+        return 'Vertex Private Ready';
+    }
+  }
+
+  String get description {
+    switch (this) {
+      case ChatProviderMode.mock:
+        return 'Local prototype replies only. No cloud calls.';
+      case ChatProviderMode.geminiPrototype:
+        return 'Cloud-ready prototype placeholder. Use sanitized dummy prompts only.';
+      case ChatProviderMode.vertexPrivateReady:
+        return 'Paid privacy-first configuration placeholder for later Vertex cutover. No live API call yet.';
+    }
+  }
+}
+EOD
+
+cat > lib/features/ai_chat/domain/ai_backend_config.dart <<'EOD'
+class AiBackendConfig {
+  final String modelName;
+  final String apiBaseUrl;
+  final bool allowGrounding;
+  final bool allowMapsGrounding;
+  final bool allowSessionMemory;
+  final bool allowFileUploads;
+  final bool hasApiKey;
+
+  const AiBackendConfig({
+    required this.modelName,
+    required this.apiBaseUrl,
+    required this.allowGrounding,
+    required this.allowMapsGrounding,
+    required this.allowSessionMemory,
+    required this.allowFileUploads,
+    required this.hasApiKey,
+  });
+
+  factory AiBackendConfig.defaults() {
+    return const AiBackendConfig(
+      modelName: 'gemini-2.5-flash',
+      apiBaseUrl: 'https://us-central1-aiplatform.googleapis.com',
+      allowGrounding: false,
+      allowMapsGrounding: false,
+      allowSessionMemory: false,
+      allowFileUploads: false,
+      hasApiKey: false,
+    );
+  }
+
+  AiBackendConfig copyWith({
+    String? modelName,
+    String? apiBaseUrl,
+    bool? allowGrounding,
+    bool? allowMapsGrounding,
+    bool? allowSessionMemory,
+    bool? allowFileUploads,
+    bool? hasApiKey,
+  }) {
+    return AiBackendConfig(
+      modelName: modelName ?? this.modelName,
+      apiBaseUrl: apiBaseUrl ?? this.apiBaseUrl,
+      allowGrounding: allowGrounding ?? this.allowGrounding,
+      allowMapsGrounding: allowMapsGrounding ?? this.allowMapsGrounding,
+      allowSessionMemory: allowSessionMemory ?? this.allowSessionMemory,
+      allowFileUploads: allowFileUploads ?? this.allowFileUploads,
+      hasApiKey: hasApiKey ?? this.hasApiKey,
+    );
+  }
+}
+EOD
+
+cat > lib/features/ai_chat/data/ai_backend_config_repository.dart <<'EOD'
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../domain/ai_backend_config.dart';
+
+class AiBackendConfigRepository {
+  static const String _modelNameKey = 'ai_backend_model_name';
+  static const String _apiBaseUrlKey = 'ai_backend_api_base_url';
+  static const String _allowGroundingKey = 'ai_backend_allow_grounding';
+  static const String _allowMapsGroundingKey = 'ai_backend_allow_maps_grounding';
+  static const String _allowSessionMemoryKey = 'ai_backend_allow_session_memory';
+  static const String _allowFileUploadsKey = 'ai_backend_allow_file_uploads';
+  static const String _apiKeyStorageKey = 'ai_backend_api_key';
+
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+
+  Future<AiBackendConfig> getConfig() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedKey = await _secureStorage.read(key: _apiKeyStorageKey);
+
+    return AiBackendConfig(
+      modelName: prefs.getString(_modelNameKey) ?? 'gemini-2.5-flash',
+      apiBaseUrl: prefs.getString(_apiBaseUrlKey) ??
+          'https://us-central1-aiplatform.googleapis.com',
+      allowGrounding: prefs.getBool(_allowGroundingKey) ?? false,
+      allowMapsGrounding: prefs.getBool(_allowMapsGroundingKey) ?? false,
+      allowSessionMemory: prefs.getBool(_allowSessionMemoryKey) ?? false,
+      allowFileUploads: prefs.getBool(_allowFileUploadsKey) ?? false,
+      hasApiKey: savedKey != null && savedKey.isNotEmpty,
+    );
+  }
+
+  Future<void> saveConfig(AiBackendConfig config) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_modelNameKey, config.modelName);
+    await prefs.setString(_apiBaseUrlKey, config.apiBaseUrl);
+    await prefs.setBool(_allowGroundingKey, config.allowGrounding);
+    await prefs.setBool(_allowMapsGroundingKey, config.allowMapsGrounding);
+    await prefs.setBool(_allowSessionMemoryKey, config.allowSessionMemory);
+    await prefs.setBool(_allowFileUploadsKey, config.allowFileUploads);
+  }
+
+  Future<void> saveApiKey(String apiKey) async {
+    await _secureStorage.write(key: _apiKeyStorageKey, value: apiKey);
+  }
+
+  Future<void> clearApiKey() async {
+    await _secureStorage.delete(key: _apiKeyStorageKey);
+  }
+}
+EOD
+
+cat > lib/features/ai_chat/data/vertex_private_ready_provider.dart <<'EOD'
+import '../domain/chat_message.dart';
+import '../domain/chat_provider.dart';
+
+class VertexPrivateReadyProvider implements ChatProvider {
+  @override
+  Future<ChatMessage> generateReply({
+    required List<ChatMessage> messages,
+    required String userInput,
+  }) async {
+    return ChatMessage(
+      role: ChatRole.assistant,
+      text:
+          'Vertex Private Ready mode is configured as a future paid backend path, but no live request is being made yet. Keep using sanitized dummy prompts until the real cutover is complete.',
+      timestamp: DateTime.now(),
+    );
+  }
+}
+EOD
+python3 - <<'EOD'
+from pathlib import Path
+
+factory_path = Path('lib/features/ai_chat/data/chat_provider_factory.dart')
+factory_text = factory_path.read_text(encoding='utf-8')
+
+if "import 'vertex_private_ready_provider.dart';" not in factory_text:
+    factory_text = factory_text.replace(
+        "import 'mock_recovery_coach_provider.dart';\n",
+        "import 'mock_recovery_coach_provider.dart';\nimport 'vertex_private_ready_provider.dart';\n",
+    )
+
+factory_text = factory_text.replace(
+"""class ChatProviderFactory {
+  static ChatProvider create(ChatProviderMode mode) {
+    switch (mode) {
+      case ChatProviderMode.mock:
+        return MockRecoveryCoachProvider();
+      case ChatProviderMode.geminiPrototype:
+        return GeminiPrototypeProvider();
+    }
+  }
+}
+""",
+"""class ChatProviderFactory {
+  static ChatProvider create(ChatProviderMode mode) {
+    switch (mode) {
+      case ChatProviderMode.mock:
+        return MockRecoveryCoachProvider();
+      case ChatProviderMode.geminiPrototype:
+        return GeminiPrototypeProvider();
+      case ChatProviderMode.vertexPrivateReady:
+        return VertexPrivateReadyProvider();
+    }
+  }
+}
+""")
+
+factory_path.write_text(factory_text, encoding='utf-8')
+print('Patched chat_provider_factory.dart')
+EOD
+
+cat > lib/features/premium/presentation/premium_screen.dart <<'EOD'
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_spacing.dart';
@@ -402,3 +615,59 @@ class _PremiumScreenState extends State<PremiumScreen> {
     );
   }
 }
+EOD
+cat > tools/verify_ba26.py <<'EOD'
+from pathlib import Path
+import sys
+
+REQUIRED = [
+    'lib/features/ai_chat/domain/chat_provider_mode.dart',
+    'lib/features/ai_chat/domain/ai_backend_config.dart',
+    'lib/features/ai_chat/data/ai_backend_config_repository.dart',
+    'lib/features/ai_chat/data/vertex_private_ready_provider.dart',
+    'lib/features/ai_chat/data/chat_provider_factory.dart',
+    'lib/features/premium/presentation/premium_screen.dart',
+]
+
+REQUIRED_TEXT = {
+    'lib/features/ai_chat/domain/chat_provider_mode.dart': 'vertexPrivateReady',
+    'lib/features/ai_chat/domain/ai_backend_config.dart': 'class AiBackendConfig',
+    'lib/features/ai_chat/data/ai_backend_config_repository.dart': 'class AiBackendConfigRepository',
+    'lib/features/ai_chat/data/vertex_private_ready_provider.dart': 'Vertex Private Ready mode is configured',
+    'lib/features/ai_chat/data/chat_provider_factory.dart': 'case ChatProviderMode.vertexPrivateReady:',
+    'lib/features/premium/presentation/premium_screen.dart': 'Paid Backend Readiness',
+}
+
+def main() -> int:
+    root = Path.cwd()
+
+    missing = [path for path in REQUIRED if not (root / path).exists()]
+    if missing:
+      print('Missing files:')
+      for item in missing:
+        print(f' - {item}')
+      return 1
+
+    bad = []
+    for path, needle in REQUIRED_TEXT.items():
+      text = (root / path).read_text(encoding='utf-8')
+      if needle not in text:
+        bad.append((path, needle))
+
+    if bad:
+      print('Content checks failed:')
+      for path, needle in bad:
+        print(f' - {path} missing: {needle}')
+      return 1
+
+    print('Breakout Addiction BA-26 paid config verification passed.')
+    print(f'Checked {len(REQUIRED)} files and {len(REQUIRED_TEXT)} content rules.')
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())
+EOD
+
+echo "==> BA-26 paid config scaffold written."
+echo "==> Running Python verification..."
+python3 tools/verify_ba26.py
