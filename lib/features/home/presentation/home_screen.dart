@@ -4,14 +4,85 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../core/constants/route_names.dart';
 import '../../../core/widgets/info_card.dart';
 import '../../../core/widgets/primary_button.dart';
+import '../../settings/data/feature_control_settings_repository.dart';
+import '../../settings/domain/feature_control_settings.dart';
 import 'widgets/daily_quote_card.dart';
 import 'widgets/home_hero_card.dart';
 import 'widgets/progress_snapshot_card.dart';
 import 'widgets/quick_actions_row.dart';
 import 'widgets/risk_status_card.dart';
+import 'widgets/startup_notice_sheet.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  static bool _startupNoticeHandledThisSession = false;
+  final FeatureControlSettingsRepository _settingsRepository =
+      FeatureControlSettingsRepository();
+
+  @override
+  void initState() {
+    super.initState();
+    _maybeShowStartupNotice();
+  }
+
+  Future<void> _maybeShowStartupNotice() async {
+    final settings = await _settingsRepository.getSettings();
+    if (!mounted) {
+      return;
+    }
+
+    if (!settings.showStartupNotice || _startupNoticeHandledThisSession) {
+      return;
+    }
+
+    _startupNoticeHandledThisSession = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      var currentSettings = settings;
+
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (sheetContext) {
+          return StatefulBuilder(
+            builder: (context, setSheetState) {
+              return StartupNoticeSheet(
+                showOnStartup: currentSettings.showStartupNotice,
+                onShowOnStartupChanged: (value) async {
+                  currentSettings =
+                      currentSettings.copyWith(showStartupNotice: value);
+                  await _settingsRepository.saveSettings(currentSettings);
+                  setSheetState(() {});
+                },
+                onContinue: () {
+                  Navigator.pop(sheetContext);
+                },
+                onOpenFeatureChoices: () {
+                  Navigator.pop(sheetContext);
+                  Navigator.pushNamed(context, RouteNames.featureControls);
+                },
+                onOpenSupport: () {
+                  Navigator.pop(sheetContext);
+                  Navigator.pushNamed(context, RouteNames.support);
+                },
+              );
+            },
+          );
+        },
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,13 +117,16 @@ class HomeScreen extends StatelessWidget {
                   const Text('Keep Building'),
                   const SizedBox(height: AppSpacing.sm),
                   const Text(
-                    'Use Learn for deeper understanding and Support for your personal plan, privacy settings, and risk windows.',
+                    'Use Learn for deeper understanding and Support for your personal plan, privacy settings, premium choices, and feature controls.',
                   ),
                   const SizedBox(height: AppSpacing.md),
                   PrimaryButton(
                     label: 'Open Learn',
                     icon: Icons.menu_book_outlined,
-                    onPressed: () => Navigator.pushNamed(context, RouteNames.educate),
+                    onPressed: () => Navigator.pushNamed(
+                      context,
+                      RouteNames.educate,
+                    ),
                   ),
                 ],
               ),

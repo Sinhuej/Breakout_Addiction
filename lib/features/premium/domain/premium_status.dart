@@ -1,26 +1,32 @@
+import 'premium_plan.dart';
+
 class PremiumStatus {
-  final bool isUnlocked;
+  final PremiumPlan plan;
   final bool showUpgradePrompts;
 
   const PremiumStatus({
-    required this.isUnlocked,
+    required this.plan,
     required this.showUpgradePrompts,
   });
 
   factory PremiumStatus.defaults() {
     return const PremiumStatus(
-      isUnlocked: false,
+      plan: PremiumPlan.none,
       showUpgradePrompts: true,
     );
   }
 
   PremiumStatus copyWith({
-    bool? isUnlocked,
+    PremiumPlan? plan,
     bool? showUpgradePrompts,
   }) {
     return PremiumStatus(
-      isUnlocked: isUnlocked ?? this.isUnlocked,
+      plan: plan ?? this.plan,
       showUpgradePrompts: showUpgradePrompts ?? this.showUpgradePrompts,
     );
   }
+
+  bool get isUnlocked => plan != PremiumPlan.none;
+  bool get hasPremium => plan == PremiumPlan.plus || plan == PremiumPlan.plusAi;
+  bool get hasAiPremium => plan == PremiumPlan.plusAi;
 }

@@ -1,4 +1,5 @@
 import '../../premium/data/premium_access_repository.dart';
+import '../../settings/data/feature_control_settings_repository.dart';
 import '../domain/ai_preflight_status.dart';
 import '../domain/chat_provider_mode.dart';
 import 'ai_backend_config_repository.dart';
@@ -14,12 +15,15 @@ class AiBackendPreflightService {
       AiBackendConfigRepository();
   final AiRuntimeGateRepository _runtimeGateRepository =
       AiRuntimeGateRepository();
+  final FeatureControlSettingsRepository _featureRepository =
+      FeatureControlSettingsRepository();
 
   Future<AiPreflightStatus> run() async {
     final premium = await _premiumRepository.getStatus();
     final settings = await _settingsRepository.getSettings();
     final backend = await _backendRepository.getConfig();
     final remoteEnabled = await _runtimeGateRepository.getRemotePathEnabled();
+    final featureSettings = await _featureRepository.getSettings();
 
     final providerIsVertex =
         settings.providerMode == ChatProviderMode.vertexPrivateReady;
@@ -31,8 +35,14 @@ class AiBackendPreflightService {
 
     final blockers = <String>[];
 
-    if (!premium.isUnlocked) {
-      blockers.add('Premium is locked.');
+    if (!premium.hasAiPremium) {
+      blockers.add('Breakout Plus AI is not active.');
+    }
+    if (!featureSettings.aiChatEnabled) {
+      blockers.add('AI chat is disabled in Feature Controls.');
+    }
+    if (!featureSettings.remoteAiFeaturesEnabled) {
+      blockers.add('Remote AI features are disabled in Feature Controls.');
     }
     if (!providerIsVertex) {
       blockers.add('Provider mode is not Vertex Private Ready.');
@@ -47,7 +57,9 @@ class AiBackendPreflightService {
       blockers.add('One or more risky features are enabled.');
     }
 
-    final readyForRemoteStub = premium.isUnlocked &&
+    final readyForRemoteStub = premium.hasAiPremium &&
+        featureSettings.aiChatEnabled &&
+        featureSettings.remoteAiFeaturesEnabled &&
         providerIsVertex &&
         remoteEnabled &&
         backend.hasApiKey &&
@@ -68,7 +80,7 @@ class AiBackendPreflightService {
     }
 
     return AiPreflightStatus(
-      premiumUnlocked: premium.isUnlocked,
+      premiumUnlocked: premium.hasAiPremium,
       providerModeLabel: settings.providerMode.label,
       providerIsVertexPrivateReady: providerIsVertex,
       remotePathEnabled: remoteEnabled,

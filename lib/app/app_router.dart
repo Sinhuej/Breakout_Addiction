@@ -18,6 +18,7 @@ import '../features/privacy/presentation/privacy_settings_screen.dart';
 import '../features/privacy/presentation/protected_route_gate.dart';
 import '../features/rescue/presentation/rescue_screen.dart';
 import '../features/risk/presentation/risk_windows_screen.dart';
+import '../features/settings/presentation/feature_controls_screen.dart';
 import '../features/support/presentation/recovery_plan_screen.dart';
 import '../features/support/presentation/support_screen.dart';
 import '../features/widget/presentation/widget_preview_screen.dart';
@@ -105,6 +106,13 @@ class AppRouter {
           builder: (_) => const ProtectedRouteGate(
             scope: LockScope.support,
             child: AiChatScreen(),
+          ),
+        );
+      case RouteNames.featureControls:
+        return MaterialPageRoute(
+          builder: (_) => const ProtectedRouteGate(
+            scope: LockScope.support,
+            child: FeatureControlsScreen(),
           ),
         );
       case RouteNames.riskWindows:

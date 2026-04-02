@@ -162,7 +162,6 @@ class _SupportScreenState extends State<SupportScreen> {
                 controller: nameController,
                 decoration: const InputDecoration(
                   labelText: 'Name',
-                  border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -171,7 +170,6 @@ class _SupportScreenState extends State<SupportScreen> {
                 keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(
                   labelText: 'Phone',
-                  border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -187,15 +185,14 @@ class _SupportScreenState extends State<SupportScreen> {
                   if (!contact.isValid) {
                     ScaffoldMessenger.of(sheetContext).showSnackBar(
                       const SnackBar(
-                        content: Text(
-                          'Enter both a name and phone number.',
-                        ),
+                        content: Text('Enter both a name and phone number.'),
                       ),
                     );
                     return;
                   }
 
                   await _contactRepository.saveContact(contact);
+
                   if (!mounted) {
                     return;
                   }
@@ -206,9 +203,7 @@ class _SupportScreenState extends State<SupportScreen> {
                   }
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(
-                        'Saved trusted contact: ${contact.name}.',
-                      ),
+                      content: Text('Saved trusted contact: ${contact.name}.'),
                     ),
                   );
                 },
@@ -344,6 +339,52 @@ class _SupportScreenState extends State<SupportScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text('Feature Choices', style: AppTypography.section),
+                const SizedBox(height: AppSpacing.sm),
+                const Text(
+                  'You can keep things simple and local, or turn on optional features later. Nothing is forced.',
+                  style: AppTypography.muted,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                PrimaryButton(
+                  label: 'Open Feature Controls',
+                  icon: Icons.tune_outlined,
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    RouteNames.featureControls,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          InfoCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Premium Options', style: AppTypography.section),
+                const SizedBox(height: AppSpacing.sm),
+                const Text(
+                  'Breakout Plus gives a premium app experience without AI chat. Breakout Plus AI adds optional AI features.',
+                  style: AppTypography.muted,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                PrimaryButton(
+                  label: 'Open Premium',
+                  icon: Icons.workspace_premium_outlined,
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    RouteNames.premium,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          InfoCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text('Daily Encouragement', style: AppTypography.section),
                 const SizedBox(height: AppSpacing.sm),
                 const Text(
@@ -374,7 +415,6 @@ class _SupportScreenState extends State<SupportScreen> {
                   initialValue: _religion,
                   decoration: const InputDecoration(
                     labelText: 'Faith / Religion Preference',
-                    border: OutlineInputBorder(),
                   ),
                   items: _religions
                       .map(
@@ -388,121 +428,6 @@ class _SupportScreenState extends State<SupportScreen> {
                     if (value == null) return;
                     _saveReligion(value);
                   },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          InfoCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Risk Windows & Reminders', style: AppTypography.section),
-                const SizedBox(height: AppSpacing.sm),
-                const Text(
-                  'Define high-risk time windows and reminder lead times so the app can become more proactive.',
-                  style: AppTypography.muted,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                PrimaryButton(
-                  label: 'Open Risk Windows',
-                  icon: Icons.schedule_outlined,
-                  onPressed: () => Navigator.pushNamed(
-                    context,
-                    RouteNames.riskWindows,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          InfoCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Personal Recovery Plan', style: AppTypography.section),
-                const SizedBox(height: AppSpacing.sm),
-                const Text(
-                  'Write down your risky places, your first move, your backup move, and your fallback plan.',
-                  style: AppTypography.muted,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                PrimaryButton(
-                  label: 'Open Recovery Plan',
-                  icon: Icons.assignment_outlined,
-                  onPressed: () => Navigator.pushNamed(
-                    context,
-                    RouteNames.recoveryPlan,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          InfoCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Home Screen Widget', style: AppTypography.section),
-                const SizedBox(height: AppSpacing.sm),
-                const Text(
-                  'Preview the widget content and keep the Android widget overlay files ready for later native wiring.',
-                  style: AppTypography.muted,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                PrimaryButton(
-                  label: 'Open Widget Preview',
-                  icon: Icons.widgets_outlined,
-                  onPressed: () => Navigator.pushNamed(
-                    context,
-                    RouteNames.widgetPreview,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          InfoCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('AI Recovery Coach', style: AppTypography.section),
-                const SizedBox(height: AppSpacing.sm),
-                const Text(
-                  'Premium prototype chat shell with local history and mock coaching replies. No cloud calls yet.',
-                  style: AppTypography.muted,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                PrimaryButton(
-                  label: 'Open AI Coach',
-                  icon: Icons.smart_toy_outlined,
-                  onPressed: () => Navigator.pushNamed(
-                    context,
-                    RouteNames.aiChat,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          InfoCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Premium', style: AppTypography.section),
-                const SizedBox(height: AppSpacing.sm),
-                const Text(
-                  'Premium hooks are ready for deeper learning and future advanced tools without locking core recovery help.',
-                  style: AppTypography.muted,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                PrimaryButton(
-                  label: 'Open Premium',
-                  icon: Icons.workspace_premium_outlined,
-                  onPressed: () => Navigator.pushNamed(
-                    context,
-                    RouteNames.premium,
-                  ),
                 ),
               ],
             ),
@@ -529,49 +454,6 @@ class _SupportScreenState extends State<SupportScreen> {
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 4,
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.pushReplacementNamed(context, RouteNames.home);
-              break;
-            case 1:
-              Navigator.pushReplacementNamed(context, RouteNames.rescue);
-              break;
-            case 2:
-              Navigator.pushReplacementNamed(context, RouteNames.logHub);
-              break;
-            case 3:
-              Navigator.pushReplacementNamed(context, RouteNames.insights);
-              break;
-            case 4:
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.flash_on_outlined),
-            label: 'Rescue',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.edit_note_outlined),
-            label: 'Log',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.insights_outlined),
-            label: 'Insights',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.support_agent_outlined),
-            label: 'Support',
           ),
         ],
       ),

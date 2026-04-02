@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_typography.dart';
+import '../../../core/constants/route_names.dart';
 import '../../../core/widgets/info_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../ai_chat/data/ai_backend_config_repository.dart';
@@ -11,7 +12,10 @@ import '../../ai_chat/data/ai_runtime_gate_repository.dart';
 import '../../ai_chat/domain/ai_backend_config.dart';
 import '../../ai_chat/domain/ai_preflight_status.dart';
 import '../../ai_chat/domain/chat_provider_mode.dart';
+import '../../settings/data/feature_control_settings_repository.dart';
+import '../../settings/domain/feature_control_settings.dart';
 import '../data/premium_access_repository.dart';
+import '../domain/premium_plan.dart';
 import '../domain/premium_status.dart';
 import 'widgets/premium_badge.dart';
 
@@ -32,11 +36,15 @@ class _PremiumScreenState extends State<PremiumScreen> {
       AiRuntimeGateRepository();
   final AiBackendPreflightService _preflightService =
       AiBackendPreflightService();
+  final FeatureControlSettingsRepository _featureRepository =
+      FeatureControlSettingsRepository();
 
   PremiumStatus _status = PremiumStatus.defaults();
   ChatProviderMode _providerMode = ChatProviderMode.mock;
   AiBackendConfig _backendConfig = AiBackendConfig.defaults();
   AiPreflightStatus _preflight = AiPreflightStatus.initial();
+  FeatureControlSettings _featureSettings =
+      FeatureControlSettings.defaults();
   bool _remotePathEnabled = false;
   bool _loading = true;
 
@@ -52,6 +60,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
     final backendConfig = await _backendRepository.getConfig();
     final remotePathEnabled = await _runtimeGateRepository.getRemotePathEnabled();
     final preflight = await _preflightService.run();
+    final featureSettings = await _featureRepository.getSettings();
 
     if (!mounted) {
       return;
@@ -63,22 +72,19 @@ class _PremiumScreenState extends State<PremiumScreen> {
       _backendConfig = backendConfig;
       _remotePathEnabled = remotePathEnabled;
       _preflight = preflight;
+      _featureSettings = featureSettings;
       _loading = false;
     });
   }
 
-  Future<void> _toggleDemoUnlock(bool value) async {
-    await _repository.setUnlocked(value);
+  Future<void> _setPlan(PremiumPlan plan) async {
+    await _repository.setPlan(plan);
     await _load();
     if (!mounted) {
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(value
-            ? 'Premium demo unlocked locally.'
-            : 'Premium demo returned to locked state.'),
-      ),
+      SnackBar(content: Text('Premium plan set to ${plan.label}.')),
     );
   }
 
@@ -325,10 +331,10 @@ class _PremiumScreenState extends State<PremiumScreen> {
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
-          Text('Breakout Plus', style: AppTypography.title),
+          Text('Breakout Premium', style: AppTypography.title),
           const SizedBox(height: AppSpacing.xs),
           const Text(
-            'Core recovery help stays free. Premium is for deeper guidance, richer learning, and future advanced tools.',
+            'Choose the tier and feature comfort level that fits you best.',
             style: AppTypography.muted,
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -336,22 +342,29 @@ class _PremiumScreenState extends State<PremiumScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Current Access', style: AppTypography.section),
+                Text('Plan', style: AppTypography.section),
                 const SizedBox(height: AppSpacing.sm),
-                Text(
-                  _status.isUnlocked ? 'Premium unlocked' : 'Premium locked',
-                  style: AppTypography.body,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  value: _status.isUnlocked,
-                  onChanged: _toggleDemoUnlock,
-                  title: const Text('Local Demo Unlock'),
-                  subtitle: const Text(
-                    'Safe dev toggle for local testing until real billing is wired later.',
+                DropdownButtonFormField<PremiumPlan>(
+                  initialValue: _status.plan,
+                  decoration: const InputDecoration(
+                    labelText: 'Premium Plan',
                   ),
+                  items: PremiumPlan.values
+                      .map(
+                        (plan) => DropdownMenuItem<PremiumPlan>(
+                          value: plan,
+                          child: Text(plan.label),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    _setPlan(value);
+                  },
                 ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(_status.plan.subtitle, style: AppTypography.muted),
+                const SizedBox(height: AppSpacing.md),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   value: _status.showUpgradePrompts,
@@ -359,6 +372,37 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   title: const Text('Show Upgrade Prompts'),
                   subtitle: const Text(
                     'Controls whether soft premium prompts appear in the app.',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          InfoCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Feature Controls', style: AppTypography.section),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'AI chat: ${_featureSettings.aiChatEnabled ? 'on' : 'off'} • '
+                  'AI guidance: ${_featureSettings.aiGuidanceEnabled ? 'on' : 'off'} • '
+                  'Faith layer: ${_featureSettings.faithLayerEnabled ? 'on' : 'off'}',
+                  style: AppTypography.body,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Startup notice: ${_featureSettings.showStartupNotice ? 'on' : 'off'} • '
+                  'Remote AI features: ${_featureSettings.remoteAiFeaturesEnabled ? 'on' : 'off'}',
+                  style: AppTypography.body,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                PrimaryButton(
+                  label: 'Open Feature Controls',
+                  icon: Icons.tune_outlined,
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    RouteNames.featureControls,
                   ),
                 ),
               ],
@@ -467,27 +511,15 @@ class _PremiumScreenState extends State<PremiumScreen> {
           ),
           const SizedBox(height: AppSpacing.md),
           _featureCard(
-            title: 'Educate Me Plus',
+            title: 'Breakout Plus',
             subtitle:
-                'Deeper pattern breakdowns, topic tracks, and richer learning modules.',
+                'Premium app experience without AI chat. Strong local-first premium path.',
           ),
           const SizedBox(height: AppSpacing.md),
           _featureCard(
-            title: 'Advanced Insights',
+            title: 'Breakout Plus AI',
             subtitle:
-                'Longer pattern history, stronger summaries, and more detailed behavior trends.',
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _featureCard(
-            title: 'Future Coaching Layer',
-            subtitle:
-                'Reserved space for later premium guidance and expanded support tools.',
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          PrimaryButton(
-            label: _status.isUnlocked ? 'Premium Active' : 'Upgrade Hooks Ready',
-            icon: Icons.workspace_premium_outlined,
-            onPressed: () {},
+                'Everything in Plus, plus optional AI guidance and chat features.',
           ),
         ],
       ),

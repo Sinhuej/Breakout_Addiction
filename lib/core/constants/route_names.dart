@@ -17,4 +17,5 @@ class RouteNames {
   static const widgetPreview = '/widget-preview';
   static const cycle = '/cycle';
   static const privacySettings = '/privacy';
+  static const featureControls = '/feature-controls';
 }

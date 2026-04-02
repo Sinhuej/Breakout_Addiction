@@ -7,6 +7,8 @@ import '../../../core/widgets/info_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../premium/data/premium_access_repository.dart';
 import '../../premium/domain/premium_status.dart';
+import '../../settings/data/feature_control_settings_repository.dart';
+import '../../settings/domain/feature_control_settings.dart';
 import '../data/ai_backend_preflight_service.dart';
 import '../data/ai_chat_repository.dart';
 import '../data/ai_chat_settings_repository.dart';
@@ -29,12 +31,16 @@ class _AiChatScreenState extends State<AiChatScreen> {
   final AiChatRepository _chatRepository = AiChatRepository();
   final AiChatSettingsRepository _settingsRepository =
       AiChatSettingsRepository();
+  final FeatureControlSettingsRepository _featureRepository =
+      FeatureControlSettingsRepository();
   final AiInputGuardrailService _guardrailService = AiInputGuardrailService();
   final AiBackendPreflightService _preflightService =
       AiBackendPreflightService();
   final TextEditingController _controller = TextEditingController();
 
   PremiumStatus _premiumStatus = PremiumStatus.defaults();
+  FeatureControlSettings _featureSettings =
+      FeatureControlSettings.defaults();
   AiChatSettings _settings = AiChatSettings.defaults();
   AiPreflightStatus _preflightStatus = AiPreflightStatus.initial();
   List<ChatMessage> _messages = <ChatMessage>[];
@@ -79,6 +85,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
 
   Future<void> _load() async {
     final premium = await _premiumRepository.getStatus();
+    final featureSettings = await _featureRepository.getSettings();
     final messages = await _chatRepository.getMessages();
     final settings = await _settingsRepository.getSettings();
     final preflight = await _preflightService.run();
@@ -88,13 +95,14 @@ class _AiChatScreenState extends State<AiChatScreen> {
     }
 
     final loadedMessages = <ChatMessage>[...messages];
-    if (premium.isUnlocked && loadedMessages.isEmpty) {
+    if (premium.hasAiPremium && loadedMessages.isEmpty) {
       loadedMessages.add(_welcomeMessage());
       await _chatRepository.saveMessages(loadedMessages);
     }
 
     setState(() {
       _premiumStatus = premium;
+      _featureSettings = featureSettings;
       _settings = settings;
       _preflightStatus = preflight;
       _messages = loadedMessages;
@@ -343,13 +351,19 @@ class _AiChatScreenState extends State<AiChatScreen> {
   }
 
   Widget _lockedView(BuildContext context) {
+    final whyLocked = !_premiumStatus.hasAiPremium
+        ? 'Breakout Plus AI is part of the optional AI layer, not Breakout Plus.'
+        : !_featureSettings.aiChatEnabled
+            ? 'AI chat is currently turned off in Feature Controls.'
+            : 'This feature is not available yet.';
+
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         Text('AI Recovery Coach', style: AppTypography.title),
         const SizedBox(height: AppSpacing.xs),
-        const Text(
-          'This is a premium prototype feature. The paid version will be privacy-first, but this shell does not make confidentiality promises.',
+        Text(
+          whyLocked,
           style: AppTypography.muted,
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -366,7 +380,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
               Text('What it will do', style: AppTypography.section),
               const SizedBox(height: AppSpacing.sm),
               const Text(
-                'Premium AI chat will help users reflect, interrupt patterns earlier, and use recovery tools more consistently.',
+                'Plus AI adds optional AI chat. Breakout Plus still gives a strong premium experience without AI.',
                 style: AppTypography.muted,
               ),
               const SizedBox(height: AppSpacing.md),
@@ -374,6 +388,18 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 label: 'Open Premium',
                 icon: Icons.workspace_premium_outlined,
                 onPressed: () => Navigator.pushNamed(context, RouteNames.premium),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    RouteNames.featureControls,
+                  ),
+                  icon: const Icon(Icons.tune_outlined),
+                  label: const Text('Feature Controls'),
+                ),
               ),
             ],
           ),
@@ -468,6 +494,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
       );
     }
 
+    final canUseAiChat =
+        _premiumStatus.hasAiPremium && _featureSettings.aiChatEnabled;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('AI Recovery Coach'),
@@ -478,9 +507,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
           ),
         ],
       ),
-      body: _premiumStatus.isUnlocked
-          ? _unlockedView(context)
-          : _lockedView(context),
+      body: canUseAiChat ? _unlockedView(context) : _lockedView(context),
     );
   }
 }
