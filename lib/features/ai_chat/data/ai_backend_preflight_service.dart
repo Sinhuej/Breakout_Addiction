@@ -25,8 +25,14 @@ class AiBackendPreflightService {
     final remoteEnabled = await _runtimeGateRepository.getRemotePathEnabled();
     final featureSettings = await _featureRepository.getSettings();
 
+    final providerSupportsRemotePath =
+        settings.providerMode == ChatProviderMode.geminiPrototype ||
+            settings.providerMode == ChatProviderMode.vertexPrivateReady;
+
     final providerIsVertex =
         settings.providerMode == ChatProviderMode.vertexPrivateReady;
+    final providerIsGemini =
+        settings.providerMode == ChatProviderMode.geminiPrototype;
 
     final riskyFeaturesForcedOff = !backend.allowGrounding &&
         !backend.allowMapsGrounding &&
@@ -44,8 +50,8 @@ class AiBackendPreflightService {
     if (!featureSettings.remoteAiFeaturesEnabled) {
       blockers.add('Remote AI features are disabled in Feature Controls.');
     }
-    if (!providerIsVertex) {
-      blockers.add('Provider mode is not Vertex Private Ready.');
+    if (!providerSupportsRemotePath) {
+      blockers.add('Selected provider does not use a remote path.');
     }
     if (!remoteEnabled) {
       blockers.add('Remote backend path is disabled.');
@@ -60,20 +66,23 @@ class AiBackendPreflightService {
     final readyForRemoteStub = premium.hasAiPremium &&
         featureSettings.aiChatEnabled &&
         featureSettings.remoteAiFeaturesEnabled &&
-        providerIsVertex &&
+        providerSupportsRemotePath &&
         remoteEnabled &&
         backend.hasApiKey &&
         riskyFeaturesForcedOff;
 
     String summaryLine;
-    if (readyForRemoteStub) {
+    if (readyForRemoteStub && providerIsGemini) {
+      summaryLine =
+          'Gemini prototype remote path is armed. Not confidential. Only sanitized prompts should be used.';
+    } else if (readyForRemoteStub && providerIsVertex) {
       summaryLine =
           'Remote paid path is armed, but it is still routed to a stub transport until the live cutover is built.';
     } else if (settings.providerMode == ChatProviderMode.mock) {
       summaryLine = 'Local mock mode is active. No cloud path is armed.';
-    } else if (settings.providerMode == ChatProviderMode.geminiPrototype) {
+    } else if (providerIsGemini) {
       summaryLine =
-          'Gemini prototype placeholder mode is active. Keep using sanitized dummy prompts only.';
+          'Gemini prototype mode is selected, but the real remote call path is still blocked by one or more preflight checks.';
     } else {
       summaryLine =
           'Vertex private-ready mode is selected, but the paid path is still blocked by one or more preflight checks.';

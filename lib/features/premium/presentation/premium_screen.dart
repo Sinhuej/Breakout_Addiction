@@ -416,7 +416,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                 Text('AI Chat Provider Mode', style: AppTypography.section),
                 const SizedBox(height: AppSpacing.sm),
                 const Text(
-                  'Choose the prototype provider path. Keep using sanitized dummy prompts only until the real privacy-safe backend is ready.',
+                  'Choose the prototype provider path. Gemini Prototype can make a real cloud prototype call only when Plus AI, feature toggles, API key, and the remote gate are all enabled. It is still not confidential.',
                   style: AppTypography.muted,
                 ),
                 const SizedBox(height: AppSpacing.md),

@@ -44,6 +44,10 @@ class AiBackendConfigRepository {
     await _secureStorage.write(key: _apiKeyStorageKey, value: apiKey);
   }
 
+  Future<String?> getApiKey() async {
+    return _secureStorage.read(key: _apiKeyStorageKey);
+  }
+
   Future<void> clearApiKey() async {
     await _secureStorage.delete(key: _apiKeyStorageKey);
   }

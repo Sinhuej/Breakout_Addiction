@@ -303,7 +303,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
             Text('Mode Banner', style: AppTypography.section),
             SizedBox(height: AppSpacing.sm),
             Text(
-              'Gemini prototype placeholder mode is active. Not confidential. Use sanitized dummy prompts only.',
+              'Gemini prototype mode is active. Not confidential. Only sanitized prompts should be used. When Plus AI, Feature Controls, API key, and the remote gate are all enabled, this mode can send a real prototype cloud request.',
               style: AppTypography.muted,
             ),
           ],
