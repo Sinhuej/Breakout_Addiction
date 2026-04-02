@@ -28,8 +28,8 @@ class BreakoutNotificationService {
     tz.initializeTimeZones();
 
     try {
-      final timeZoneName = await FlutterTimezone.getLocalTimezone();
-      tz.setLocalLocation(tz.getLocation(timeZoneName));
+      final timeZoneInfo = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(timeZoneInfo.identifier));
     } catch (_) {
       // Keep timezone defaults if device lookup fails.
     }
@@ -43,7 +43,9 @@ class BreakoutNotificationService {
       macOS: darwinSettings,
     );
 
-    await _plugin.initialize(initSettings);
+    await _plugin.initialize(
+      settings: initSettings,
+    );
 
     const androidChannel = AndroidNotificationChannel(
       riskChannelId,
@@ -74,13 +76,21 @@ class BreakoutNotificationService {
         await _plugin
             .resolvePlatformSpecificImplementation<
                 IOSFlutterLocalNotificationsPlugin>()
-            ?.requestPermissions(alert: true, badge: true, sound: true);
+            ?.requestPermissions(
+              alert: true,
+              badge: true,
+              sound: true,
+            );
         break;
       case TargetPlatform.macOS:
         await _plugin
             .resolvePlatformSpecificImplementation<
                 MacOSFlutterLocalNotificationsPlugin>()
-            ?.requestPermissions(alert: true, badge: true, sound: true);
+            ?.requestPermissions(
+              alert: true,
+              badge: true,
+              sound: true,
+            );
         break;
       default:
         break;
@@ -131,11 +141,11 @@ class BreakoutNotificationService {
     );
 
     await _plugin.zonedSchedule(
-      id,
-      title,
-      body,
-      nextOccurrence(hour: hour, minute: minute),
-      details,
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: nextOccurrence(hour: hour, minute: minute),
+      notificationDetails: details,
       payload: payload,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
@@ -144,6 +154,6 @@ class BreakoutNotificationService {
 
   Future<void> cancel(int id) async {
     await initialize();
-    await _plugin.cancel(id);
+    await _plugin.cancel(id: id);
   }
 }

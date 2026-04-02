@@ -21,6 +21,7 @@ import '../domain/ai_preflight_status.dart';
 import '../domain/ai_usage_snapshot.dart';
 import '../domain/chat_message.dart';
 import '../domain/chat_provider_mode.dart';
+import '../domain/guardrail_result.dart';
 import 'widgets/ai_mode_clarity_card.dart';
 import 'widgets/ai_usage_meter_card.dart';
 import 'widgets/emergency_fallback_card.dart';
