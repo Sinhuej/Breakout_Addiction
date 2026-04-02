@@ -5,8 +5,11 @@ import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/info_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../ai_chat/data/ai_backend_config_repository.dart';
+import '../../ai_chat/data/ai_backend_preflight_service.dart';
 import '../../ai_chat/data/ai_chat_settings_repository.dart';
+import '../../ai_chat/data/ai_runtime_gate_repository.dart';
 import '../../ai_chat/domain/ai_backend_config.dart';
+import '../../ai_chat/domain/ai_preflight_status.dart';
 import '../../ai_chat/domain/chat_provider_mode.dart';
 import '../data/premium_access_repository.dart';
 import '../domain/premium_status.dart';
@@ -25,10 +28,16 @@ class _PremiumScreenState extends State<PremiumScreen> {
       AiChatSettingsRepository();
   final AiBackendConfigRepository _backendRepository =
       AiBackendConfigRepository();
+  final AiRuntimeGateRepository _runtimeGateRepository =
+      AiRuntimeGateRepository();
+  final AiBackendPreflightService _preflightService =
+      AiBackendPreflightService();
 
   PremiumStatus _status = PremiumStatus.defaults();
   ChatProviderMode _providerMode = ChatProviderMode.mock;
   AiBackendConfig _backendConfig = AiBackendConfig.defaults();
+  AiPreflightStatus _preflight = AiPreflightStatus.initial();
+  bool _remotePathEnabled = false;
   bool _loading = true;
 
   @override
@@ -41,6 +50,8 @@ class _PremiumScreenState extends State<PremiumScreen> {
     final status = await _repository.getStatus();
     final chatSettings = await _chatSettingsRepository.getSettings();
     final backendConfig = await _backendRepository.getConfig();
+    final remotePathEnabled = await _runtimeGateRepository.getRemotePathEnabled();
+    final preflight = await _preflightService.run();
 
     if (!mounted) {
       return;
@@ -50,6 +61,8 @@ class _PremiumScreenState extends State<PremiumScreen> {
       _status = status;
       _providerMode = chatSettings.providerMode;
       _backendConfig = backendConfig;
+      _remotePathEnabled = remotePathEnabled;
+      _preflight = preflight;
       _loading = false;
     });
   }
@@ -82,6 +95,23 @@ class _PremiumScreenState extends State<PremiumScreen> {
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('AI provider mode set to ${mode.label}.')),
+    );
+  }
+
+  Future<void> _setRemotePathEnabled(bool value) async {
+    await _runtimeGateRepository.setRemotePathEnabled(value);
+    await _load();
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          value
+              ? 'Remote backend path enabled, but still stubbed.'
+              : 'Remote backend path disabled.',
+        ),
+      ),
     );
   }
 
@@ -239,6 +269,48 @@ class _PremiumScreenState extends State<PremiumScreen> {
     );
   }
 
+  Widget _preflightCard() {
+    return InfoCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Paid Path Preflight', style: AppTypography.section),
+          const SizedBox(height: AppSpacing.sm),
+          Text('Provider: ${_preflight.providerModeLabel}', style: AppTypography.body),
+          const SizedBox(height: 4),
+          Text(
+            _preflight.remotePathEnabled
+                ? 'Remote path: enabled'
+                : 'Remote path: disabled',
+            style: AppTypography.body,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _preflight.apiKeyPresent ? 'API key: present' : 'API key: missing',
+            style: AppTypography.body,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _preflight.riskyFeaturesForcedOff
+                ? 'Risky features: forced off'
+                : 'Risky features: unsafe',
+            style: AppTypography.body,
+          ),
+          const SizedBox(height: 8),
+          Text(_preflight.summaryLine, style: AppTypography.muted),
+          if (_preflight.blockerLines.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            for (final line in _preflight.blockerLines)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text('• $line', style: AppTypography.body),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -335,6 +407,24 @@ class _PremiumScreenState extends State<PremiumScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text('Remote Path Kill Switch', style: AppTypography.section),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: _remotePathEnabled,
+                  onChanged: _setRemotePathEnabled,
+                  title: const Text('Enable Remote Backend Path'),
+                  subtitle: const Text(
+                    'This arms the paid backend path only after all preflight checks pass. It still uses a stub transport today.',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          InfoCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text('Paid Backend Readiness', style: AppTypography.section),
                 const SizedBox(height: AppSpacing.sm),
                 Text('Model: ${_backendConfig.modelName}', style: AppTypography.body),
@@ -359,6 +449,8 @@ class _PremiumScreenState extends State<PremiumScreen> {
               ],
             ),
           ),
+          const SizedBox(height: AppSpacing.md),
+          _preflightCard(),
           const SizedBox(height: AppSpacing.md),
           const InfoCard(
             child: Column(

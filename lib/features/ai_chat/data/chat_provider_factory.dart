@@ -3,6 +3,7 @@ import '../domain/chat_provider_mode.dart';
 import 'gemini_prototype_provider.dart';
 import 'mock_recovery_coach_provider.dart';
 import 'vertex_private_ready_provider.dart';
+import 'vertex_transport_stub.dart';
 
 class ChatProviderFactory {
   static ChatProvider create(ChatProviderMode mode) {
@@ -12,7 +13,9 @@ class ChatProviderFactory {
       case ChatProviderMode.geminiPrototype:
         return GeminiPrototypeProvider();
       case ChatProviderMode.vertexPrivateReady:
-        return VertexPrivateReadyProvider();
+        return VertexPrivateReadyProvider(
+          transport: VertexTransportStub(),
+        );
     }
   }
 }

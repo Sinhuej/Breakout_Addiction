@@ -7,13 +7,15 @@ import '../../../core/widgets/info_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../premium/data/premium_access_repository.dart';
 import '../../premium/domain/premium_status.dart';
+import '../data/ai_backend_preflight_service.dart';
 import '../data/ai_chat_repository.dart';
 import '../data/ai_chat_settings_repository.dart';
 import '../data/ai_input_guardrail_service.dart';
 import '../data/chat_provider_factory.dart';
 import '../domain/ai_chat_settings.dart';
+import '../domain/ai_preflight_status.dart';
 import '../domain/chat_message.dart';
-import '../domain/guardrail_result.dart';
+import '../domain/chat_provider_mode.dart';
 
 class AiChatScreen extends StatefulWidget {
   const AiChatScreen({super.key});
@@ -28,10 +30,13 @@ class _AiChatScreenState extends State<AiChatScreen> {
   final AiChatSettingsRepository _settingsRepository =
       AiChatSettingsRepository();
   final AiInputGuardrailService _guardrailService = AiInputGuardrailService();
+  final AiBackendPreflightService _preflightService =
+      AiBackendPreflightService();
   final TextEditingController _controller = TextEditingController();
 
   PremiumStatus _premiumStatus = PremiumStatus.defaults();
   AiChatSettings _settings = AiChatSettings.defaults();
+  AiPreflightStatus _preflightStatus = AiPreflightStatus.initial();
   List<ChatMessage> _messages = <ChatMessage>[];
   bool _loading = true;
   bool _sending = false;
@@ -76,6 +81,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
     final premium = await _premiumRepository.getStatus();
     final messages = await _chatRepository.getMessages();
     final settings = await _settingsRepository.getSettings();
+    final preflight = await _preflightService.run();
 
     if (!mounted) {
       return;
@@ -90,6 +96,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
     setState(() {
       _premiumStatus = premium;
       _settings = settings;
+      _preflightStatus = preflight;
       _messages = loadedMessages;
       _loading = false;
     });
@@ -135,6 +142,35 @@ class _AiChatScreenState extends State<AiChatScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Message blocked: ${review.reason.label}.')),
+      );
+      return;
+    }
+
+    final freshPreflight = await _preflightService.run();
+    if (!mounted) {
+      return;
+    }
+    setState(() => _preflightStatus = freshPreflight);
+
+    if (_settings.providerMode == ChatProviderMode.vertexPrivateReady &&
+        !freshPreflight.readyForRemoteStub) {
+      final blockedRemoteMessage = _systemStyleMessage(
+        'Remote paid path is not ready yet. ${freshPreflight.summaryLine} ${freshPreflight.blockerLines.join(' ')}',
+      );
+      final nextMessages = <ChatMessage>[..._messages, blockedRemoteMessage];
+      await _chatRepository.saveMessages(nextMessages);
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _messages = nextMessages;
+        _controller.clear();
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Paid backend path blocked by preflight checks.')),
       );
       return;
     }
@@ -234,6 +270,62 @@ class _AiChatScreenState extends State<AiChatScreen> {
     );
   }
 
+  Widget _modeBannerCard() {
+    if (_settings.providerMode == ChatProviderMode.mock) {
+      return const InfoCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Mode Banner', style: AppTypography.section),
+            SizedBox(height: AppSpacing.sm),
+            Text(
+              'Local mock mode is active. No cloud path is armed.',
+              style: AppTypography.muted,
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_settings.providerMode == ChatProviderMode.geminiPrototype) {
+      return const InfoCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Mode Banner', style: AppTypography.section),
+            SizedBox(height: AppSpacing.sm),
+            Text(
+              'Gemini prototype placeholder mode is active. Not confidential. Use sanitized dummy prompts only.',
+              style: AppTypography.muted,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return InfoCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Mode Banner', style: AppTypography.section),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            _preflightStatus.summaryLine,
+            style: AppTypography.muted,
+          ),
+          if (_preflightStatus.blockerLines.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            for (final line in _preflightStatus.blockerLines)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text('• $line', style: AppTypography.body),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _guardrailCard() {
     return const InfoCard(
       child: Column(
@@ -262,6 +354,8 @@ class _AiChatScreenState extends State<AiChatScreen> {
         ),
         const SizedBox(height: AppSpacing.lg),
         _providerStatusCard(),
+        const SizedBox(height: AppSpacing.md),
+        _modeBannerCard(),
         const SizedBox(height: AppSpacing.md),
         _guardrailCard(),
         const SizedBox(height: AppSpacing.md),
@@ -301,6 +395,8 @@ class _AiChatScreenState extends State<AiChatScreen> {
           child: Column(
             children: [
               _providerStatusCard(),
+              const SizedBox(height: AppSpacing.md),
+              _modeBannerCard(),
               const SizedBox(height: AppSpacing.md),
               _guardrailCard(),
               const SizedBox(height: AppSpacing.md),
