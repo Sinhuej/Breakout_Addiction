@@ -193,7 +193,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(
+      return Scaffold(
         appBar: AppBar(title: Text('Privacy Lock Mode')),
         body: Center(child: CircularProgressIndicator()),
       );

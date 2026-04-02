@@ -83,7 +83,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(
+      return Scaffold(
         appBar: AppBar(title: Text('Premium')),
         body: Center(child: CircularProgressIndicator()),
       );
